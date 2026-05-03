@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeinGo Editor</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Editör temel stilleri */
+        #editor {
+            min-height: 400px;
+            padding: 1.5rem;
+            outline: none;
+        }
+        #editor p {
+            margin-bottom: 1em;
+        }
+        #editor ul {
+            list-style-type: disc;
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+        #editor ol {
+            list-style-type: decimal;
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+        #editor blockquote {
+            border-left: 4px solid #cbd5e1;
+            padding-left: 1em;
+            color: #64748b;
+            margin-bottom: 1em;
+        }
+
+        /* Modal görünürlük geçişi */
+        .modal-visible {
+            opacity: 1 !important;
+        }
+        .modal-visible > div {
+            transform: scale(1) !important;
+        }
+
+        /* Yükleniyor spinner animasyonu */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-8 font-sans text-gray-800">
+
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 flex flex-col">
+        <!-- Menü Çubuğu -->
+        <div id="menubar" class="border-b border-gray-200 bg-gray-50 px-2 py-1 text-sm flex items-center gap-2">
+            <!-- Teingo Marka -->
+            <div id="editor-brand" class="flex items-center gap-1.5 pr-3 mr-1 border-r border-gray-300">
+                <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="7" fill="#2563eb"/>
+                    <text x="16" y="22" text-anchor="middle" fill="white" font-size="18" font-weight="bold" font-family="system-ui">T</text>
+                </svg>
+                <span style="font-weight: 700; font-size: 14px; background: linear-gradient(135deg, #2563eb, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TeinGo</span>
+            </div>
+        </div>
+        
+        <!-- Araç Çubuğu -->
+        <div id="toolbar" class="border-b border-gray-200 p-2 flex flex-wrap gap-1 bg-white items-center sticky top-0 z-10"></div>
+        
+        <!-- Editör Alanı -->
+        <div id="editor" contenteditable="true" class="prose max-w-none flex-grow">
+            <h1>Hoş Geldiniz</h1>
+            <p>Buraya bir şeyler yazabilir, medya ekleyebilir ve test edebilirsiniz.</p>
+        </div>
+
+        <!-- Alt Bilgi Çubuğu -->
+        <div class="border-t border-gray-200 bg-gray-50 p-3 flex justify-between items-center text-sm">
+            <div class="flex items-center gap-4">
+                <span id="word-count" class="text-gray-500">0 Kelime</span>
+                <span class="text-gray-300">|</span>
+                <span class="text-gray-400 text-xs">Powered by <strong class="text-gray-500">TeinGo</strong></span>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div id="save-status" class="hidden"></div>
+                <button id="save-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center font-medium">
+                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editör Başlatma Scripti -->
+    <script type="module">
+        import { initEditor } from './js/app.js';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initEditor();
+        });
+    </script>
+</body>
+</html>
