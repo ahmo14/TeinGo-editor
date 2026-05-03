@@ -1,5 +1,6 @@
 export default {
   "appTitle": "Rich Text Szerkesztő",
+  "footer": "Használja a <strong style=\"color:#64748b;\">TeinGo</strong> gazdag szerkesztőt szövegekhez, képletekhez, képekhez és médiához.",
   "placeholder": "Kezdjen el gépelni...",
   "save": "Mentés",
   "saving": "Mentés...",

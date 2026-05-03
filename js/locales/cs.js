@@ -1,5 +1,6 @@
 export default {
   "appTitle": "RTF Editor",
+  "footer": "Používejte bohatý editor <strong style=\"color:#64748b;\">TeinGo</strong> pro text, vzorce, obrázky a média.",
   "placeholder": "Začněte psát...",
   "save": "Uložit",
   "saving": "Ukládání...",

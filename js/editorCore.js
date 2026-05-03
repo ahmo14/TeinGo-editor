@@ -24,6 +24,9 @@ export class EditorCore {
     /** @type {Range|null} - Toolbar tıklaması sırasında kaybolan seçimi tutmak için */
     this._savedRange = null;
 
+    /** @type {HTMLElement|null} - Tıklanarak seçilen IMG/VIDEO elementi */
+    this._selectedMedia = null;
+
     /** @type {Set<(commandName: string) => void>} */
     this._listeners = new Set();
 
@@ -517,8 +520,7 @@ export class EditorCore {
    */
   setBlockAlignment(alignment) {
     let targetMedia = this.editorElement.querySelector('.editor-media-selected');
-    
-    // Eğer custom seçili medya yoksa normal selection'a bak
+
     if (!targetMedia) {
       const selection = this.getSelection();
       if (selection && selection.rangeCount > 0) {
@@ -534,33 +536,45 @@ export class EditorCore {
       }
     }
 
-    let block = this.getClosestBlock();
+    if (targetMedia) {
+      targetMedia.style.display = 'inline-block';
+      targetMedia.style.marginLeft  = '';
+      targetMedia.style.marginRight = '';
 
-    // Özel durum: Custom Media seçiliyse block bulunamayabilir, çünkü selection sıfırlanmıştır.
-    // O yüzden block'u atlayıp doğrudan targetMedia üzerinden işlem yapmalıyız.
-
-    if (!block && !targetMedia) {
-      block = this._ensureBlockWrapper();
-      if (!block) return;
-    }
-
-    if (targetMedia || (block && ['IMG', 'VIDEO'].includes(block.tagName))) {
-      const media = targetMedia || block;
-      media.style.display = 'block';
-      if (alignment === 'center') {
-        media.style.marginLeft = 'auto';
-        media.style.marginRight = 'auto';
-      } else if (alignment === 'right') {
-        media.style.marginLeft = 'auto';
-        media.style.marginRight = '0';
+      const blockTags = ['P','DIV','H1','H2','H3','H4','H5','H6','LI','BLOCKQUOTE'];
+      let parentBlock = targetMedia.parentElement;
+      while (parentBlock && parentBlock !== this.editorElement && !blockTags.includes(parentBlock.tagName)) {
+        parentBlock = parentBlock.parentElement;
+      }
+      if (!parentBlock || parentBlock === this.editorElement) {
+        const p = document.createElement('p');
+        p.style.textAlign = alignment;
+        targetMedia.parentNode.insertBefore(p, targetMedia);
+        p.appendChild(targetMedia);
       } else {
-        media.style.marginLeft = '0';
-        media.style.marginRight = 'auto';
+        parentBlock.style.textAlign = alignment;
       }
       return;
     }
 
-    // LI içindeyse hem LI'yı hem parent listeyi hizala
+    let block = this.getClosestBlock();
+
+    if (!block) {
+      block = this._ensureBlockWrapper();
+      if (!block) return;
+    }
+
+    if (['IMG', 'VIDEO'].includes(block.tagName)) {
+      block.style.display = 'inline-block';
+      block.style.marginLeft  = '';
+      block.style.marginRight = '';
+      const p = document.createElement('p');
+      p.style.textAlign = alignment;
+      block.parentNode.insertBefore(p, block);
+      p.appendChild(block);
+      return;
+    }
+
     if (block && block.tagName === 'LI') {
       block.style.textAlign = alignment;
     } else if (block) {
@@ -788,23 +802,28 @@ export class EditorCore {
   _setupEventListeners() {
     // Medya dışına tıklandığında seçimi kaydet ve medyaları temizle
     this.editorElement.addEventListener('mouseup', (e) => {
-      // Eğer bir medyaya tıklandıysa mouseup işlemini atla (click'te hallediyoruz)
       if (e.target && (['IMG', 'VIDEO'].includes(e.target.tagName) || e.target.classList.contains('embed-wrapper'))) {
         return;
       }
 
-      // Medya dışı bir yere tıklandıysa, eski medya seçimlerini temizle
-      this.editorElement.querySelectorAll('.editor-media-selected').forEach(m => {
-        m.style.outline = 'none';
-        m.style.boxShadow = 'none';
-        m.classList.remove('editor-media-selected');
-      });
+      if (this._selectedMedia) {
+        this._selectedMedia.style.outline = '';
+        this._selectedMedia.style.boxShadow = '';
+        this._selectedMedia.classList.remove('editor-media-selected');
+        this._selectedMedia = null;
+      }
 
       this.saveSelection();
       this._notifyListeners('selectionchange');
     });
 
     this.editorElement.addEventListener('keyup', () => {
+      if (this._selectedMedia) {
+        this._selectedMedia.style.outline = '';
+        this._selectedMedia.style.boxShadow = '';
+        this._selectedMedia.classList.remove('editor-media-selected');
+        this._selectedMedia = null;
+      }
       this.saveSelection();
       this._notifyListeners('selectionchange');
     });
@@ -812,38 +831,33 @@ export class EditorCore {
     // Medya elemanlarına tıklandığında (Custom Object Selection)
     this.editorElement.addEventListener('click', (e) => {
       if (e.target && (['IMG', 'VIDEO'].includes(e.target.tagName) || e.target.classList.contains('embed-wrapper'))) {
-         // Diğer medyaların seçimlerini temizle
-         this.editorElement.querySelectorAll('.editor-media-selected').forEach(m => {
-           m.style.outline = 'none';
-           m.style.boxShadow = 'none';
-           m.classList.remove('editor-media-selected');
-         });
+        if (this._selectedMedia && this._selectedMedia !== e.target) {
+          this._selectedMedia.style.outline = '';
+          this._selectedMedia.style.boxShadow = '';
+          this._selectedMedia.classList.remove('editor-media-selected');
+        }
 
-         // Tıklanan medyayı "seçili" yap (sadece görsel olarak)
-         e.target.style.outline = '3px solid #3b82f6';
-         e.target.style.outlineOffset = '2px';
-         e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.2)';
-         e.target.classList.add('editor-media-selected');
+        e.target.style.outline = '3px solid #3b82f6';
+        e.target.style.outlineOffset = '2px';
+        e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.2)';
+        e.target.classList.add('editor-media-selected');
+        this._selectedMedia = e.target;
 
-         // Tarayıcının o kocaman mavi filteri basmasını engellemek için metin seçimini temizliyoruz!
-         const selection = this.getSelection();
-         if (selection) selection.removeAllRanges();
+        const selection = this.getSelection();
+        if (selection) selection.removeAllRanges();
 
-         this._notifyListeners('selectionchange');
+        this._notifyListeners('selectionchange');
       }
     });
 
     // Klavye kısayolları ve Silme İşlemi (Backspace/Delete)
     this.editorElement.addEventListener('keydown', (e) => {
-      // Özel medya seçiliyse ve silmeye basıldıysa:
-      if (e.key === 'Backspace' || e.key === 'Delete') {
-        const selectedMedia = this.editorElement.querySelector('.editor-media-selected');
-        if (selectedMedia) {
-          e.preventDefault();
-          selectedMedia.remove();
-          this._notifyListeners('selectionchange');
-          return;
-        }
+      if ((e.key === 'Backspace' || e.key === 'Delete') && this._selectedMedia) {
+        e.preventDefault();
+        this._selectedMedia.remove();
+        this._selectedMedia = null;
+        this._notifyListeners('selectionchange');
+        return;
       }
 
       this.commands.forEach((command, name) => {

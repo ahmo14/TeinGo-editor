@@ -378,7 +378,7 @@ function createInstance(textarea, options) {
       <rect width="32" height="32" rx="7" fill="#2563eb"/>
       <text x="16" y="22" text-anchor="middle" fill="white" font-size="18" font-weight="bold" font-family="system-ui">T</text>
     </svg>
-    <span>Metin, formül, görsel ve medya için <strong style="color:#64748b;">TeinGo</strong> zengin editörü kullanın.</span>
+    <span>Powered by <strong style="color:#64748b;">TeinGo</strong></span>
   `;
 
   wrapper.appendChild(menuBarDiv);
@@ -403,15 +403,11 @@ function createInstance(textarea, options) {
   textarea.style.display = 'none';
   textarea.insertAdjacentElement('afterend', wrapper);
 
-  // Host uygulamanın oluşturduğu eski açıklama metnini gizle
-  // (ⓘ "Metin, formül, görsel ve medya için zengin editörü kullanın." gibi)
+  // Host uygulamanın oluşturduğu editör hint satırını gizle (tüm dillerde)
   const parent = textarea.parentElement;
   if (parent) {
-    const hints = parent.querySelectorAll('.form-text, .text-muted, small');
-    hints.forEach(el => {
-      if (el.textContent.includes('zengin editör')) {
-        el.style.display = 'none';
-      }
+    parent.querySelectorAll('[data-editor-hint]').forEach(el => {
+      el.style.display = 'none';
     });
   }
 

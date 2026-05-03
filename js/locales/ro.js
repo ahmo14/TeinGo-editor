@@ -1,5 +1,6 @@
 export default {
   "appTitle": "Editor de text",
+  "footer": "Utilizați editorul bogat <strong style=\"color:#64748b;\">TeinGo</strong> pentru text, formule, imagini și media.",
   "placeholder": "Începeți să tastați...",
   "save": "Salvează",
   "saving": "Se salvează...",

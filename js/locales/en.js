@@ -1,5 +1,6 @@
 export default {
   "appTitle": "Rich Text Editor",
+  "footer": "Use the <strong style=\"color:#64748b;\">TeinGo</strong> rich editor for text, formulas, images, and media.",
   "placeholder": "Start typing...",
   "save": "Save Content",
   "saving": "Saving...",

@@ -1,5 +1,6 @@
 export default {
   "appTitle": "Zengin Metin Editörü",
+  "footer": "Metin, formül, görsel ve medya için <strong style=\"color:#64748b;\">TeinGo</strong> zengin editörü kullanın.",
   "placeholder": "Yazmaya başlayın...",
   "save": "İçeriği Kaydet",
   "saving": "Kaydediliyor...",

@@ -1,5 +1,6 @@
 export default {
   "appTitle": "Rich-Text-Editor",
+  "footer": "Verwenden Sie den <strong style=\"color:#64748b;\">TeinGo</strong> Rich-Editor für Text, Formeln, Bilder und Medien.",
   "placeholder": "Beginnen Sie mit der Eingabe...",
   "save": "Inhalt speichern",
   "saving": "Wird gespeichert...",

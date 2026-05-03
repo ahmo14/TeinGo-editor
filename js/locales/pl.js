@@ -1,5 +1,6 @@
 export default {
   "appTitle": "Edytor tekstu",
+  "footer": "Korzystaj z bogatego edytora <strong style=\"color:#64748b;\">TeinGo</strong> dla tekstu, formuł, obrazów i multimediów.",
   "placeholder": "Zacznij pisać...",
   "save": "Zapisz",
   "saving": "Zapisywanie...",

@@ -1,5 +1,6 @@
 export default {
   "appTitle": "Editor di testo RTF",
+  "footer": "Utilizza l'editor ricco <strong style=\"color:#64748b;\">TeinGo</strong> per testo, formule, immagini e media.",
   "placeholder": "Inizia a digitare...",
   "save": "Salva contenuto",
   "saving": "Salvataggio...",

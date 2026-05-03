@@ -1,5 +1,6 @@
 export default {
   "appTitle": "Editor de texto enriquecido",
+  "footer": "Utilice el editor enriquecido <strong style=\"color:#64748b;\">TeinGo</strong> para texto, fórmulas, imágenes y medios.",
   "placeholder": "Empieza a escribir...",
   "save": "Guardar",
   "saving": "Guardando...",
