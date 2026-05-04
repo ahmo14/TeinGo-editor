@@ -1,5 +1,6 @@
 import { BaseCommand } from './baseCommand.js';
 import { PromptModal } from '../promptModal.js';
+import { t } from '../i18n.js';
 
 /**
  * LinkCommand - Seçili metni <a href="..." target="_blank"> bağlantısına dönüştürür.
@@ -37,7 +38,7 @@ export class LinkCommand extends BaseCommand {
     editor.saveSelection();
 
     // URL sor
-    const url = await PromptModal.show('Bağlantı URL\'si girin:', 'https://', 'Bağlantı Ekle');
+    const url = await PromptModal.show(t('modal.link_prompt') || 'Bağlantı URL\\'si girin:', 'https://', t('menu.link') || 'Bağlantı Ekle');
 
     // İptal edildiyse hiçbir şey yapma
     if (!url || url === 'https://') return;

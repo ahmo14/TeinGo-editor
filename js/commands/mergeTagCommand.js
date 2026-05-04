@@ -1,5 +1,6 @@
 import { BaseCommand } from './baseCommand.js';
 import { PromptModal } from '../promptModal.js';
+import { t } from '../i18n.js';
 
 export class MergeTagCommand extends BaseCommand {
   constructor() {
@@ -14,7 +15,7 @@ export class MergeTagCommand extends BaseCommand {
 
   async execute(editor) {
     editor.saveSelection();
-    const tag = await PromptModal.show('Etiket adını girin (ör. ISIM, TARIH):', '', 'Birleştirme Etiketi');
+    const tag = await PromptModal.show(t('modal.merge_tag_prompt') || 'Etiket adını girin (ör. ISIM, TARIH):', '', t('menu.mergeTag') || 'Birleştirme Etiketi');
     if (!tag) {
       editor.restoreSelection();
       return;

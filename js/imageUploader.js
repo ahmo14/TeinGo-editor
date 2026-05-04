@@ -11,6 +11,8 @@
  * - Dönen JSON'dan URL'yi al
  */
 
+import { t } from './i18n.js';
+
 /**
  * Resim dosyasını sunucuya yükler (şimdilik simülasyon).
  *
@@ -28,13 +30,13 @@
 export async function uploadImage(file) {
   // Dosya tipi kontrolü
   if (!file.type.startsWith('image/')) {
-    throw new Error(`Geçersiz dosya türü: ${file.type}. Sadece resim dosyaları kabul edilir.`);
+    throw new Error(`${t('modal.invalid_file_type') || 'Geçersiz dosya türü:'} ${file.type}. ${t('modal.only_images_allowed') || 'Sadece resim dosyaları kabul edilir.'}`);
   }
 
   // Dosya boyutu kontrolü (10MB sınırı)
   const MAX_SIZE_MB = 10;
   if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-    throw new Error(`Dosya boyutu çok büyük (${(file.size / 1024 / 1024).toFixed(1)}MB). Maksimum: ${MAX_SIZE_MB}MB`);
+    throw new Error(`${t('modal.file_too_large') || 'Dosya boyutu çok büyük'} (${(file.size / 1024 / 1024).toFixed(1)}MB). ${t('modal.maximum') || 'Maksimum:'} ${MAX_SIZE_MB}MB`);
   }
 
   // Geçici çözüm: Backend olmadığı için resmi Base64'e çeviriyoruz.
@@ -51,7 +53,7 @@ export async function uploadImage(file) {
       };
       
       reader.onerror = () => {
-        reject(new Error("Resim dosyası okunamadı."));
+        reject(new Error(t('modal.image_read_error') || "Resim dosyası okunamadı."));
       };
       
       reader.readAsDataURL(file);

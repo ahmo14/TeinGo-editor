@@ -1,5 +1,6 @@
 import { BaseCommand } from './baseCommand.js';
 import { PromptModal } from '../promptModal.js';
+import { t } from '../i18n.js';
 
 export class CommentCommand extends BaseCommand {
   constructor() {
@@ -21,7 +22,7 @@ export class CommentCommand extends BaseCommand {
     }
     
     editor.saveSelection();
-    const comment = await PromptModal.show('Yorumunuzu girin:', '', 'Yorum Ekle');
+    const comment = await PromptModal.show(t('modal.comment_prompt') || 'Yorumunuzu girin:', '', t('menu.comment') || 'Yorum Ekle');
     if (!comment) {
       editor.restoreSelection();
       return;

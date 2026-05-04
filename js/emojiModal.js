@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 /**
  * EmojiModal - Emoji seçim modalı
  */
@@ -45,7 +47,7 @@ export class EmojiModal {
 
     const header = document.createElement('div');
     header.className = 'flex items-center justify-between px-5 py-3 border-b border-gray-200';
-    header.innerHTML = '<h3 class="text-base font-semibold text-gray-800">Emojiler (Emojis)</h3>';
+    header.innerHTML = `<h3 class="text-base font-semibold text-gray-800">${t('modal.emoji_title')}</h3>`;
     
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -62,14 +64,14 @@ export class EmojiModal {
     sidebar.className = 'w-1/3 border-r border-gray-200 pr-2 overflow-y-auto';
     
     const categories = [
-      { id: 'all', name: 'Tümü' },
-      { id: 'smileys', name: 'Yüzler' },
-      { id: 'gestures', name: 'El Hareketleri' },
-      { id: 'animals', name: 'Hayvanlar' },
-      { id: 'food', name: 'Yiyecek & İçecek' },
-      { id: 'travel', name: 'Seyahat & Yerler' },
-      { id: 'objects', name: 'Nesneler' },
-      { id: 'symbols', name: 'Semboller' }
+      { id: 'all', name: t('modal.cat_all') },
+      { id: 'smileys', name: t('modal.cat_smileys') },
+      { id: 'gestures', name: t('modal.cat_gestures') },
+      { id: 'animals', name: t('modal.cat_animals') },
+      { id: 'food', name: t('modal.cat_food') },
+      { id: 'travel', name: t('modal.cat_travel') },
+      { id: 'objects', name: t('modal.cat_objects') },
+      { id: 'symbols', name: t('modal.cat_symbols') }
     ];
 
     let activeCategoryBtn = null;
@@ -80,7 +82,7 @@ export class EmojiModal {
     
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
-    searchInput.placeholder = 'Ara... (Search)';
+    searchInput.placeholder = t('modal.search');
     searchInput.className = 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400';
     
     const charsContainer = document.createElement('div');
@@ -145,7 +147,7 @@ export class EmojiModal {
     footer.className = 'flex justify-end px-5 py-3 border-t border-gray-200';
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.textContent = 'Kapat';
+    cancelBtn.textContent = t('modal.close');
     cancelBtn.className = 'px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer';
     cancelBtn.addEventListener('click', () => this._close(null));
     footer.appendChild(cancelBtn);

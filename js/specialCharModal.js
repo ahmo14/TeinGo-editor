@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 /**
  * SpecialCharModal - Özel Karakter seçim modalı
  */
@@ -45,7 +47,7 @@ export class SpecialCharModal {
 
     const header = document.createElement('div');
     header.className = 'flex items-center justify-between px-5 py-3 border-b border-gray-200';
-    header.innerHTML = '<h3 class="text-base font-semibold text-gray-800">Özel Karakter (Special Character)</h3>';
+    header.innerHTML = `<h3 class="text-base font-semibold text-gray-800">${t('modal.special_char_title')}</h3>`;
     
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -62,12 +64,12 @@ export class SpecialCharModal {
     sidebar.className = 'w-1/3 border-r border-gray-200 pr-2 overflow-y-auto';
     
     const categories = [
-      { id: 'all', name: 'Tümü (All)' },
-      { id: 'currency', name: 'Para Birimi (Currency)' },
-      { id: 'text', name: 'Metin (Text)' },
-      { id: 'math', name: 'Matematik (Mathematical)' },
-      { id: 'symbols', name: 'Semboller (Symbols)' },
-      { id: 'arrows', name: 'Oklar (Arrows)' }
+      { id: 'all', name: t('modal.cat_all') },
+      { id: 'currency', name: t('modal.cat_currency') },
+      { id: 'text', name: t('modal.cat_text') },
+      { id: 'math', name: t('modal.cat_math') },
+      { id: 'symbols', name: t('modal.cat_symbols') },
+      { id: 'arrows', name: t('modal.cat_arrows') }
     ];
 
     let activeCategoryBtn = null;
@@ -78,7 +80,7 @@ export class SpecialCharModal {
     
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
-    searchInput.placeholder = 'Ara... (Search)';
+    searchInput.placeholder = t('modal.search');
     searchInput.className = 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400';
     
     const charsContainer = document.createElement('div');
@@ -143,7 +145,7 @@ export class SpecialCharModal {
     footer.className = 'flex justify-end px-5 py-3 border-t border-gray-200';
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.textContent = 'Kapat (Close)';
+    cancelBtn.textContent = t('modal.close');
     cancelBtn.className = 'px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer';
     cancelBtn.addEventListener('click', () => this._close(null));
     footer.appendChild(cancelBtn);

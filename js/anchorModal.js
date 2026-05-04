@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 /**
  * AnchorModal - Çapa (ID) girişi için modal
  */
@@ -47,7 +49,7 @@ export class AnchorModal {
 
     const header = document.createElement('div');
     header.className = 'flex items-center justify-between px-5 py-3 border-b border-gray-200';
-    header.innerHTML = '<h3 class="text-base font-semibold text-gray-800">Çapa (Anchor) Ekle</h3>';
+    header.innerHTML = `<h3 class="text-base font-semibold text-gray-800">${t('modal.anchor_title')}</h3>`;
     
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -61,11 +63,11 @@ export class AnchorModal {
 
     const label = document.createElement('label');
     label.className = 'block text-sm font-medium text-gray-600 mb-2';
-    label.textContent = 'Çapa ID:';
+    label.textContent = t('modal.anchor_id');
 
     const input = document.createElement('input');
     input.type = 'text';
-    input.placeholder = 'Örn: bolum-1';
+    input.placeholder = t('modal.anchor_placeholder');
     input.className = 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400';
     
     body.appendChild(label);
@@ -76,13 +78,13 @@ export class AnchorModal {
     
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.textContent = 'İptal';
+    cancelBtn.textContent = t('modal.cancel');
     cancelBtn.className = 'px-4 py-1.5 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors cursor-pointer';
     cancelBtn.addEventListener('click', () => this._close(null));
     
     const insertBtn = document.createElement('button');
     insertBtn.type = 'button';
-    insertBtn.textContent = 'Ekle';
+    insertBtn.textContent = t('modal.insert');
     insertBtn.className = 'px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer';
     insertBtn.addEventListener('click', () => {
       // Boşlukları ve geçersiz karakterleri temizle

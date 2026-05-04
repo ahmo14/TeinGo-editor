@@ -1,6 +1,7 @@
 import { BaseCommand } from './baseCommand.js';
 import { AlertModal } from '../alertModal.js';
 import { PromptModal } from '../promptModal.js';
+import { t } from '../i18n.js';
 
 /**
  * EmbedCommand - YouTube/Vimeo veya genel iframe embed kodu ekler.
@@ -34,7 +35,7 @@ export class EmbedCommand extends BaseCommand {
     super({
       name: 'embedMedia',
       icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
-      title: 'Video/Medya Göm',
+      title: t('menu.embed') || 'Video/Medya Göm',
       shortcut: null,
       tag: null,
     });
@@ -47,9 +48,9 @@ export class EmbedCommand extends BaseCommand {
     editor.saveSelection();
 
     const input = await PromptModal.show(
-      'YouTube URL veya iframe embed kodu yapıştırın:',
+      t('modal.embed_prompt') || 'YouTube URL veya iframe embed kodu yapıştırın:',
       'https://www.youtube.com/watch?v=',
-      'Video/Medya Ekle'
+      t('menu.embed') || 'Video/Medya Ekle'
     );
 
     if (!input || input === 'https://www.youtube.com/watch?v=') return;
@@ -57,7 +58,7 @@ export class EmbedCommand extends BaseCommand {
     const embedUrl = this._resolveEmbedUrl(input.trim());
 
     if (!embedUrl) {
-      await AlertModal.show('Geçersiz veya desteklenmeyen embed kaynağı.\n\nDesteklenen: YouTube, Vimeo, Dailymotion', 'Hata');
+      await AlertModal.show(t('modal.embed_error') || 'Geçersiz veya desteklenmeyen embed kaynağı.\n\nDesteklenen: YouTube, Vimeo, Dailymotion', t('modal.error') || 'Hata');
       return;
     }
 

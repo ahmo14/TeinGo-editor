@@ -89,18 +89,8 @@ class EditorInstance {
 
   /** Insert raw HTML at the current cursor position */
   insertContent(html) {
-    this.core.restoreSelection();
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      const range = sel.getRangeAt(0);
-      const tpl   = document.createElement('template');
-      tpl.innerHTML = html;
-      range.deleteContents();
-      range.insertNode(tpl.content.cloneNode(true));
-      this.core.saveSelection();
-    } else {
-      this.editorDiv.insertAdjacentHTML('beforeend', html);
-    }
+    this.core.insertHtmlAtCursor(html);
+    this.textarea.value = getCleanHTML(this.editorDiv);
   }
 
   focus() {
@@ -286,7 +276,7 @@ function setupEditor(core, toolbar, menuBar) {
   if (menuBar) {
     menuBar.addMenu(t('menu.file'), [
       { label: t('menu.newDoc'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', action: (ed) => { ed.editorElement.innerHTML = ''; } },
-      { label: t('menu.preview'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', action: () => AlertModal.show(t('modal.info'), 'Bilgi') },
+      { label: t('menu.preview'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', action: () => AlertModal.show(t('modal.preview_soon') || 'Önizleme özelliği yakında eklenecek!', t('modal.info') || 'Bilgi') },
       'separator',
       { label: t('menu.print'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>', shortcut: 'Ctrl+P', action: () => window.print() },
     ]);
@@ -297,7 +287,7 @@ function setupEditor(core, toolbar, menuBar) {
       'separator',
       { label: t('menu.cut'),      icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>', shortcut: 'Ctrl+X', action: () => document.execCommand('cut') },
       { label: t('menu.copy'),  icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>', shortcut: 'Ctrl+C', action: () => document.execCommand('copy') },
-      { label: t('menu.paste'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>', shortcut: 'Ctrl+V', action: async () => { try { const t = await navigator.clipboard.readText(); document.execCommand('insertText', false, t); } catch { AlertModal.show(t('modal.info'), 'Bilgi'); } } },
+      { label: t('menu.paste'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>', shortcut: 'Ctrl+V', action: async () => { try { const clipboardText = await navigator.clipboard.readText(); document.execCommand('insertText', false, clipboardText); } catch { AlertModal.show(t('modal.paste_error') || 'Tarayıcı güvenlik politikası nedeniyle yapıştırmak için klavyeden Ctrl+V kullanın.', t('modal.info') || 'Bilgi'); } } },
       'separator',
       { label: t('menu.selectAll'), icon: '📝', shortcut: 'Ctrl+A', action: () => document.execCommand('selectAll') },
     ]);

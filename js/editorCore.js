@@ -10,6 +10,10 @@
  * document.execCommand KULLANILMIYOR.
  * Tüm metin manipülasyonu Selection/Range API ile yapılır.
  */
+import { t } from './i18n.js';
+
+const MEDIA_SELECTOR = 'img, video, audio, .embed-wrapper';
+
 export class EditorCore {
   /**
    * @param {HTMLElement} editorElement - contenteditable olan div
@@ -24,8 +28,13 @@ export class EditorCore {
     /** @type {Range|null} - Toolbar tıklaması sırasında kaybolan seçimi tutmak için */
     this._savedRange = null;
 
-    /** @type {HTMLElement|null} - Tıklanarak seçilen IMG/VIDEO elementi */
+    /** @type {HTMLElement|null} - Tıklanarak seçilen medya elementi */
     this._selectedMedia = null;
+
+    /** @type {HTMLButtonElement|null} */
+    this._mediaDeleteButton = null;
+
+    this._positionSelectedMediaControls = () => this._positionMediaDeleteButton();
 
     /** @type {Set<(commandName: string) => void>} */
     this._listeners = new Set();
@@ -35,11 +44,52 @@ export class EditorCore {
       const style = document.createElement('style');
       style.id = 'editor-core-styles';
       style.innerHTML = `
+        #editor img,
+        #editor video,
+        #editor audio,
+        .editor-content img,
+        .editor-content video,
+        .editor-content audio {
+          max-width: 100%;
+          height: auto;
+          cursor: pointer;
+        }
+        #editor img:hover,
+        #editor video:hover,
+        #editor audio:hover,
+        #editor .embed-wrapper:hover,
+        .editor-content img:hover,
+        .editor-content video:hover,
+        .editor-content audio:hover,
+        .editor-content .embed-wrapper:hover {
+          outline: 2px solid rgba(59, 130, 246, 0.4);
+          outline-offset: 2px;
+        }
         .editor-media-selected::selection { background: transparent !important; }
         .editor-media-selected::-moz-selection { background: transparent !important; }
-        img.editor-media-selected, video.editor-media-selected { 
-          user-select: none !important; 
-          -webkit-user-select: none !important; 
+        img.editor-media-selected,
+        video.editor-media-selected,
+        audio.editor-media-selected,
+        .embed-wrapper.editor-media-selected {
+          outline: 2px solid #3b82f6 !important;
+          outline-offset: 3px !important;
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18) !important;
+          user-select: none !important;
+          -webkit-user-select: none !important;
+        }
+        .embed-wrapper {
+          position: relative;
+          cursor: pointer;
+        }
+        .embed-wrapper::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: transparent;
+          pointer-events: auto;
+        }
+        .cre-media-delete-button:hover {
+          background: #b91c1c !important;
         }
       `;
       document.head.appendChild(style);
@@ -107,6 +157,38 @@ export class EditorCore {
   }
 
   /**
+   * Bir node'un bu editörün içinde olup olmadığını kontrol eder.
+   * @private
+   * @param {Node|null} node
+   * @returns {boolean}
+   */
+  _isNodeInEditor(node) {
+    return !!node && (node === this.editorElement || this.editorElement.contains(node));
+  }
+
+  /**
+   * Range'in tamamen bu editörün içinde ve hâlâ DOM'a bağlı olup olmadığını kontrol eder.
+   * @private
+   * @param {Range|null} range
+   * @returns {boolean}
+   */
+  _isRangeInEditor(range) {
+    return !!range
+      && this._isNodeInEditor(range.commonAncestorContainer)
+      && this._isNodeInEditor(range.startContainer)
+      && this._isNodeInEditor(range.endContainer);
+  }
+
+  /** @private */
+  _focusEditor() {
+    try {
+      this.editorElement.focus({ preventScroll: true });
+    } catch {
+      this.editorElement.focus();
+    }
+  }
+
+  /**
    * Editör içindeki aktif Range'i döndürür
    * Eğer seçim editör dışındaysa null döner
    * @returns {Range|null}
@@ -118,7 +200,7 @@ export class EditorCore {
     const range = selection.getRangeAt(0);
 
     // Range editör sınırları içinde mi?
-    if (!this.editorElement.contains(range.commonAncestorContainer)) {
+    if (!this._isRangeInEditor(range)) {
       return null;
     }
 
@@ -134,18 +216,44 @@ export class EditorCore {
     const range = this.getRange();
     if (range) {
       this._savedRange = range.cloneRange();
+      return true;
     }
+    return false;
   }
 
   /**
    * Kaydedilmiş seçimi geri yükler
+   * @param {{fallbackToEnd?: boolean}} [options]
+   * @returns {boolean}
    */
-  restoreSelection() {
-    if (this._savedRange) {
-      const selection = this.getSelection();
+  restoreSelection(options = {}) {
+    const fallbackToEnd = options.fallbackToEnd !== false;
+    const selection = this.getSelection();
+    if (!selection) return false;
+
+    const currentRange = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+    if (this._isRangeInEditor(currentRange)) {
+      const range = currentRange.cloneRange();
+      this._focusEditor();
       selection.removeAllRanges();
-      selection.addRange(this._savedRange);
+      selection.addRange(range);
+      this._savedRange = range.cloneRange();
+      return true;
     }
+
+    if (this._isRangeInEditor(this._savedRange)) {
+      this._focusEditor();
+      selection.removeAllRanges();
+      selection.addRange(this._savedRange.cloneRange());
+      return true;
+    }
+
+    if (fallbackToEnd) {
+      this.focusAtEnd();
+      return true;
+    }
+
+    return false;
   }
 
   // ──────────────────────────────────────────────
@@ -451,6 +559,15 @@ export class EditorCore {
     selection.addRange(range);
   }
 
+  /**
+   * Editöre odaklanır ve imleci editörün sonuna taşır.
+   */
+  focusAtEnd() {
+    this._focusEditor();
+    this._setCursorToEnd(this.editorElement);
+    this.saveSelection();
+  }
+
   // ──────────────────────────────────────────────
   // İmleç Yönetimi (Public)
   // ──────────────────────────────────────────────
@@ -462,6 +579,12 @@ export class EditorCore {
    * @param {HTMLElement} element - Sonrasına imleç taşınacak element
    */
   setCursorAfter(element) {
+    if (!element || !element.parentNode || !this._isNodeInEditor(element)) {
+      this.focusAtEnd();
+      return;
+    }
+
+    this._focusEditor();
     const range = document.createRange();
     range.setStartAfter(element);
     range.collapse(true);
@@ -489,14 +612,22 @@ export class EditorCore {
   insertNodeAtCursor(node) {
     this.restoreSelection();
 
-    const selection = this.getSelection();
-    if (!selection || selection.rangeCount === 0) {
+    const range = this.getRange();
+    const insertedNodes = node && node.nodeType === Node.DOCUMENT_FRAGMENT_NODE
+      ? Array.from(node.childNodes)
+      : [node].filter(Boolean);
+    const lastInserted = insertedNodes[insertedNodes.length - 1] || null;
+
+    if (!range) {
       // Seçim yoksa editörün sonuna ekle (fallback)
       this.editorElement.appendChild(node);
+      if (lastInserted) {
+        this.setCursorAfter(lastInserted);
+      } else {
+        this.focusAtEnd();
+      }
       return;
     }
-
-    const range = selection.getRangeAt(0);
 
     // Seçili metin varsa sil
     range.deleteContents();
@@ -505,7 +636,22 @@ export class EditorCore {
     range.insertNode(node);
 
     // İmleci node'un sonrasına taşı
-    this.setCursorAfter(node);
+    if (lastInserted) {
+      this.setCursorAfter(lastInserted);
+    } else {
+      this.focusAtEnd();
+    }
+  }
+
+  /**
+   * HTML içeriğini güvenli şekilde aktif editör imlecine ekler.
+   * @param {string} html
+   */
+  insertHtmlAtCursor(html) {
+    const template = document.createElement('template');
+    template.innerHTML = html || '';
+    if (!template.content.childNodes.length) return;
+    this.insertNodeAtCursor(template.content);
   }
 
   // ──────────────────────────────────────────────
@@ -519,17 +665,17 @@ export class EditorCore {
    * @param {'left'|'center'|'right'|'justify'} alignment
    */
   setBlockAlignment(alignment) {
-    let targetMedia = this.editorElement.querySelector('.editor-media-selected');
+    let targetMedia = this._selectedMedia || this.editorElement.querySelector('.editor-media-selected');
 
     if (!targetMedia) {
       const selection = this.getSelection();
       if (selection && selection.rangeCount > 0) {
         const node = selection.anchorNode;
-        if (node && node.nodeType === Node.ELEMENT_NODE && ['IMG', 'VIDEO'].includes(node.tagName)) {
+        if (node && node.nodeType === Node.ELEMENT_NODE && node.matches(MEDIA_SELECTOR)) {
           targetMedia = node;
         } else if (node && node.nodeType === Node.ELEMENT_NODE && node === this.editorElement) {
           const child = node.childNodes[selection.anchorOffset];
-          if (child && child.nodeType === Node.ELEMENT_NODE && ['IMG', 'VIDEO'].includes(child.tagName)) {
+          if (child && child.nodeType === Node.ELEMENT_NODE && child.matches(MEDIA_SELECTOR)) {
             targetMedia = child;
           }
         }
@@ -564,7 +710,7 @@ export class EditorCore {
       if (!block) return;
     }
 
-    if (['IMG', 'VIDEO'].includes(block.tagName)) {
+    if (block.matches && block.matches(MEDIA_SELECTOR)) {
       block.style.display = 'inline-block';
       block.style.marginLeft  = '';
       block.style.marginRight = '';
@@ -575,11 +721,7 @@ export class EditorCore {
       return;
     }
 
-    if (block && block.tagName === 'LI') {
-      block.style.textAlign = alignment;
-    } else if (block) {
-      block.style.textAlign = alignment;
-    }
+    block.style.textAlign = alignment;
   }
 
   // ──────────────────────────────────────────────
@@ -795,68 +937,206 @@ export class EditorCore {
   }
 
   // ──────────────────────────────────────────────
+  // Medya Seçimi
+  // ──────────────────────────────────────────────
+
+  /**
+   * @private
+   * @param {EventTarget|null} target
+   * @returns {HTMLElement|null}
+   */
+  _getMediaTarget(target) {
+    if (!(target instanceof Element)) return null;
+    const media = target.matches(MEDIA_SELECTOR) ? target : target.closest(MEDIA_SELECTOR);
+    return media instanceof HTMLElement && this._isNodeInEditor(media) ? media : null;
+  }
+
+  /**
+   * @private
+   * @param {HTMLElement} media
+   */
+  _saveRangeAfterMedia(media) {
+    if (!media.parentNode || !this._isNodeInEditor(media)) return;
+    const range = document.createRange();
+    range.setStartAfter(media);
+    range.collapse(true);
+    this._savedRange = range;
+  }
+
+  /**
+   * @private
+   * @param {HTMLElement} media
+   */
+  _selectMedia(media) {
+    if (this._selectedMedia && this._selectedMedia !== media) {
+      this._clearSelectedMedia();
+    }
+
+    this._selectedMedia = media;
+    media.classList.add('editor-media-selected');
+    media.setAttribute('data-cre-media-selected', 'true');
+    this._saveRangeAfterMedia(media);
+    this._focusEditor();
+
+    const selection = this.getSelection();
+    if (selection) selection.removeAllRanges();
+
+    this._showMediaDeleteButton();
+    this._notifyListeners('selectionchange');
+  }
+
+  /** @private */
+  _clearSelectedMedia() {
+    if (this._selectedMedia) {
+      this._selectedMedia.classList.remove('editor-media-selected');
+      this._selectedMedia.removeAttribute('data-cre-media-selected');
+      this._selectedMedia.style.outline = '';
+      this._selectedMedia.style.outlineOffset = '';
+      this._selectedMedia.style.boxShadow = '';
+      this._selectedMedia = null;
+    }
+    this._hideMediaDeleteButton();
+  }
+
+  /** @private */
+  _ensureMediaDeleteButton() {
+    if (this._mediaDeleteButton) return this._mediaDeleteButton;
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'cre-media-delete-button';
+    button.textContent = t('modal.delete') || 'Sil';
+    button.title = t('modal.delete_media') || 'Medyayı sil';
+    button.style.cssText = [
+      'position: fixed',
+      'display: none',
+      'align-items: center',
+      'justify-content: center',
+      'height: 28px',
+      'padding: 0 10px',
+      'border: 0',
+      'border-radius: 6px',
+      'background: #dc2626',
+      'color: #fff',
+      'font: 600 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      'box-shadow: 0 8px 20px rgba(15, 23, 42, 0.22)',
+      'cursor: pointer',
+      'z-index: 2147483647',
+      'user-select: none',
+    ].join('; ');
+
+    button.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._removeSelectedMedia();
+    });
+
+    document.body.appendChild(button);
+    this._mediaDeleteButton = button;
+    return button;
+  }
+
+  /** @private */
+  _showMediaDeleteButton() {
+    const button = this._ensureMediaDeleteButton();
+    button.style.display = 'inline-flex';
+    this._positionMediaDeleteButton();
+  }
+
+  /** @private */
+  _hideMediaDeleteButton() {
+    if (this._mediaDeleteButton) {
+      this._mediaDeleteButton.style.display = 'none';
+    }
+  }
+
+  /** @private */
+  _positionMediaDeleteButton() {
+    const media = this._selectedMedia;
+    const button = this._mediaDeleteButton;
+    if (!media || !button || button.style.display === 'none' || !this._isNodeInEditor(media)) return;
+
+    const rect = media.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) {
+      this._hideMediaDeleteButton();
+      return;
+    }
+
+    const width = button.offsetWidth || 48;
+    const left = Math.min(
+      Math.max(8, rect.right - width - 8),
+      Math.max(8, window.innerWidth - width - 8)
+    );
+    const top = Math.max(8, rect.top + 8);
+
+    button.style.left = `${left}px`;
+    button.style.top = `${top}px`;
+  }
+
+  /** @private */
+  _removeSelectedMedia() {
+    const media = this._selectedMedia;
+    if (!media || !media.parentNode) return;
+
+    const parent = media.parentNode;
+    const index = Array.prototype.indexOf.call(parent.childNodes, media);
+    this._clearSelectedMedia();
+    media.remove();
+
+    if (this._isNodeInEditor(parent)) {
+      this._focusEditor();
+      const range = document.createRange();
+      range.setStart(parent, Math.max(0, Math.min(index, parent.childNodes.length)));
+      range.collapse(true);
+      const selection = this.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      this._savedRange = range.cloneRange();
+    } else {
+      this.focusAtEnd();
+    }
+
+    this.editorElement.dispatchEvent(new Event('input', { bubbles: true }));
+    this._notifyListeners('selectionchange');
+  }
+
+  // ──────────────────────────────────────────────
   // Event Listeners
   // ──────────────────────────────────────────────
 
   /** @private */
   _setupEventListeners() {
+    this.editorElement.addEventListener('pointerdown', (e) => {
+      const media = this._getMediaTarget(e.target);
+      if (!media) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      this._selectMedia(media);
+    }, true);
+
     // Medya dışına tıklandığında seçimi kaydet ve medyaları temizle
     this.editorElement.addEventListener('mouseup', (e) => {
-      if (e.target && (['IMG', 'VIDEO'].includes(e.target.tagName) || e.target.classList.contains('embed-wrapper'))) {
-        return;
-      }
+      if (this._getMediaTarget(e.target)) return;
 
-      if (this._selectedMedia) {
-        this._selectedMedia.style.outline = '';
-        this._selectedMedia.style.boxShadow = '';
-        this._selectedMedia.classList.remove('editor-media-selected');
-        this._selectedMedia = null;
-      }
-
+      this._clearSelectedMedia();
       this.saveSelection();
       this._notifyListeners('selectionchange');
     });
 
     this.editorElement.addEventListener('keyup', () => {
-      if (this._selectedMedia) {
-        this._selectedMedia.style.outline = '';
-        this._selectedMedia.style.boxShadow = '';
-        this._selectedMedia.classList.remove('editor-media-selected');
-        this._selectedMedia = null;
-      }
       this.saveSelection();
+      if (this.getRange()) this._clearSelectedMedia();
       this._notifyListeners('selectionchange');
-    });
-
-    // Medya elemanlarına tıklandığında (Custom Object Selection)
-    this.editorElement.addEventListener('click', (e) => {
-      if (e.target && (['IMG', 'VIDEO'].includes(e.target.tagName) || e.target.classList.contains('embed-wrapper'))) {
-        if (this._selectedMedia && this._selectedMedia !== e.target) {
-          this._selectedMedia.style.outline = '';
-          this._selectedMedia.style.boxShadow = '';
-          this._selectedMedia.classList.remove('editor-media-selected');
-        }
-
-        e.target.style.outline = '3px solid #3b82f6';
-        e.target.style.outlineOffset = '2px';
-        e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.2)';
-        e.target.classList.add('editor-media-selected');
-        this._selectedMedia = e.target;
-
-        const selection = this.getSelection();
-        if (selection) selection.removeAllRanges();
-
-        this._notifyListeners('selectionchange');
-      }
     });
 
     // Klavye kısayolları ve Silme İşlemi (Backspace/Delete)
     this.editorElement.addEventListener('keydown', (e) => {
       if ((e.key === 'Backspace' || e.key === 'Delete') && this._selectedMedia) {
         e.preventDefault();
-        this._selectedMedia.remove();
-        this._selectedMedia = null;
-        this._notifyListeners('selectionchange');
+        this._removeSelectedMedia();
         return;
       }
 
@@ -867,6 +1147,10 @@ export class EditorCore {
         }
       });
     });
+
+    this.editorElement.addEventListener('scroll', this._positionSelectedMediaControls);
+    window.addEventListener('scroll', this._positionSelectedMediaControls, true);
+    window.addEventListener('resize', this._positionSelectedMediaControls);
   }
 
   /**

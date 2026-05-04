@@ -1,6 +1,13 @@
 import { BaseCommand } from './baseCommand.js';
 import { uploadImage } from '../imageUploader.js';
 import { t } from '../i18n.js';
+import { AlertModal } from '../alertModal.js';
+
+const esc = (value) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;');
 
 /**
  * ImageCommand - Editöre resim ekleme komutu.
@@ -114,6 +121,7 @@ export class ImageCommand extends BaseCommand {
       console.error('Resim yükleme hatası:', error);
       // Hata durumunda placeholder'ı kaldır
       placeholder.remove();
+      AlertModal.show((error && error.message) || t('modal.image_upload_error'), t('modal.error'));
     }
   }
 
@@ -125,15 +133,6 @@ export class ImageCommand extends BaseCommand {
    * @returns {HTMLElement|null}
    */
   _insertPlaceholder(editor, fileName) {
-    // File dialog kapandıktan sonra seçimi geri yükle
-    editor.restoreSelection();
-
-    const selection = editor.getSelection();
-    if (!selection || selection.rangeCount === 0) return null;
-
-    const range = selection.getRangeAt(0);
-    range.deleteContents(); // Seçili metin varsa (nadiren) sil
-
     // Placeholder element oluştur
     const placeholder = document.createElement('span');
     placeholder.contentEditable = 'false'; // Kullanıcının düzenleyememesi için
@@ -158,11 +157,11 @@ export class ImageCommand extends BaseCommand {
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
       </svg>
-      <span>${loadingText}: ${fileName}</span>
+      <span>${esc(loadingText)}: ${esc(fileName)}</span>
     `;
 
-    range.insertNode(placeholder);
+    editor.insertNodeAtCursor(placeholder);
 
-    return placeholder;
+    return placeholder.parentNode ? placeholder : null;
   }
 }

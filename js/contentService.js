@@ -12,6 +12,8 @@
  * - fetch çağrısının yorumunu aç
  */
 
+import { t } from './i18n.js';
+
 /** @type {string} Backend API endpoint'i */
 const API_ENDPOINT = '/api/contents/save';
 
@@ -56,6 +58,17 @@ export function getCleanHTML(editorElement) {
   clone.removeAttribute('aria-label');
   clone.removeAttribute('spellcheck');
 
+  clone.querySelectorAll('[data-cre-media-selected], .editor-media-selected').forEach((el) => {
+    el.classList.remove('editor-media-selected');
+    el.removeAttribute('data-cre-media-selected');
+    el.style.outline = '';
+    el.style.outlineOffset = '';
+    el.style.boxShadow = '';
+    if (!el.getAttribute('class')) {
+      el.removeAttribute('class');
+    }
+  });
+
   // 4. Boş span'ları kaldır (stil uygulanmamış, sarma amaçsız olanlar)
   //    Neden: Bazen DOM manipülasyonu sonucu içi boş veya stilsiz span'lar kalabiliyor
   clone.querySelectorAll('span').forEach((span) => {
@@ -79,7 +92,7 @@ export function getCleanHTML(editorElement) {
   clone.querySelectorAll('p').forEach((p) => {
     const text = p.textContent.trim();
     const hasOnlyBr = p.innerHTML.trim() === '<br>' || p.innerHTML.trim() === '';
-    const hasChildren = p.querySelector('img, table, .formula-inline, .embed-wrapper');
+    const hasChildren = p.querySelector('img, video, audio, table, .formula-inline, .embed-wrapper');
 
     if (!text && hasOnlyBr && !hasChildren) {
       p.remove();
@@ -174,7 +187,7 @@ function extractTitle(editorElement) {
     return fallback.length > 50 ? `${fallback.substring(0, 50)}...` : fallback;
   }
 
-  return 'Başlıksız İçerik';
+  return t('modal.untitled_content') || 'Başlıksız İçerik';
 }
 
 // ──────────────────────────────────────────────
@@ -223,7 +236,7 @@ export async function saveContent(payload) {
 
   return {
     success: true,
-    message: 'İçerik başarıyla kaydedildi.',
+    message: t('modal.content_saved_success') || 'İçerik başarıyla kaydedildi.',
   };
 
   // ──────────────────────────────────────────────
