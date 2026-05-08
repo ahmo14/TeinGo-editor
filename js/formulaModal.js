@@ -1,5 +1,3 @@
-import { t } from './i18n.js';
-
 /**
  * FormulaModal - LaTeX formül giriş modalı
  *
@@ -23,6 +21,9 @@ import { t } from './i18n.js';
  * Promise tabanlı: open() çağrılır → kullanıcı "Ekle" derse LaTeX string,
  * "İptal" veya dışına tıklarsa null döner.
  */
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+const txf = (source, ...args) => tx(source).replace(/\{(\d+)\}/g, (_, i) => args[i] ?? '');
+
 export class FormulaModal {
   constructor() {
     /** @type {HTMLElement|null} */
@@ -125,7 +126,7 @@ export class FormulaModal {
     const header = document.createElement('div');
     header.className = 'flex items-center justify-between px-5 py-3 border-b border-gray-200';
     header.innerHTML = `
-      <h3 class="text-base font-semibold text-gray-800">${t('modal.formula_title')}</h3>
+      <h3 class="text-base font-semibold text-gray-800">${tx('Denklem Ekle')}</h3>
     `;
 
     const closeBtn = document.createElement('button');
@@ -144,7 +145,7 @@ export class FormulaModal {
 
     const label = document.createElement('label');
     label.className = 'block text-sm font-medium text-gray-600 mb-1.5';
-    label.textContent = t('modal.latex_code');
+    label.textContent = tx('LaTeX Kodu');
 
     const textarea = document.createElement('textarea');
     textarea.className = [
@@ -154,7 +155,7 @@ export class FormulaModal {
       'resize-none transition-shadow',
     ].join(' ');
     textarea.rows = 3;
-    textarea.placeholder = t('modal.latex_placeholder');
+    textarea.placeholder = tx('Örnek: E = mc^2  veya  \\frac{a}{b}');
     textarea.spellcheck = false;
 
     inputGroup.appendChild(label);
@@ -171,7 +172,7 @@ export class FormulaModal {
 
     const previewLabel = document.createElement('div');
     previewLabel.className = 'text-sm font-medium text-gray-600 mb-1.5';
-    previewLabel.textContent = t('menu.preview');
+    previewLabel.textContent = tx('Önizleme');
 
     const preview = document.createElement('div');
     preview.className = [
@@ -181,7 +182,7 @@ export class FormulaModal {
       'text-gray-400 text-sm',
       'overflow-x-auto',
     ].join(' ');
-    preview.textContent = t('modal.enter_latex');
+    preview.textContent = tx('LaTeX kodu girin...');
 
     previewGroup.appendChild(previewLabel);
     previewGroup.appendChild(preview);
@@ -191,12 +192,12 @@ export class FormulaModal {
     examples.className = 'flex flex-wrap gap-1.5';
 
     const EXAMPLE_FORMULAS = [
-      { label: t('modal.examples_fraction'), latex: '\\frac{a}{b}' },
-      { label: t('modal.examples_sqrt'), latex: '\\sqrt{x^2 + y^2}' },
-      { label: t('modal.examples_sum'), latex: '\\sum_{i=1}^{n} x_i' },
-      { label: t('modal.examples_int'), latex: '\\int_{0}^{\\infty} e^{-x} dx' },
-      { label: t('modal.examples_matrix'), latex: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}' },
-      { label: t('modal.examples_limit'), latex: '\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1' },
+      { label: tx('Kesir'), latex: '\\frac{a}{b}' },
+      { label: tx('Karekök'), latex: '\\sqrt{x^2 + y^2}' },
+      { label: tx('Toplam'), latex: '\\sum_{i=1}^{n} x_i' },
+      { label: tx('İntegral'), latex: '\\int_{0}^{\\infty} e^{-x} dx' },
+      { label: tx('Matris'), latex: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}' },
+      { label: tx('Limit'), latex: '\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1' },
     ];
 
     EXAMPLE_FORMULAS.forEach((ex) => {
@@ -226,7 +227,7 @@ export class FormulaModal {
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.textContent = t('modal.cancel');
+    cancelBtn.textContent = tx('İptal');
     cancelBtn.className = [
       'px-4 py-1.5 rounded-lg text-sm font-medium',
       'text-gray-600 hover:bg-gray-100',
@@ -236,7 +237,7 @@ export class FormulaModal {
 
     const insertBtn = document.createElement('button');
     insertBtn.type = 'button';
-    insertBtn.textContent = t('modal.insert');
+    insertBtn.textContent = tx('Ekle');
     insertBtn.className = [
       'px-4 py-1.5 rounded-lg text-sm font-medium',
       'bg-blue-500 text-white hover:bg-blue-600',
@@ -252,7 +253,7 @@ export class FormulaModal {
         katex.renderToString(latex, { throwOnError: true });
         this._close(latex);
       } catch (error) {
-        errorMsg.textContent = `${t('modal.invalid_latex')}: ${error.message}`;
+        errorMsg.textContent = txf('Geçersiz LaTeX: {0}', error.message);
       }
     });
 
@@ -298,7 +299,7 @@ export class FormulaModal {
     const latex = this._textarea.value.trim();
 
     if (!latex) {
-      this._preview.textContent = t('modal.enter_latex');
+      this._preview.textContent = tx('LaTeX kodu girin...');
       this._preview.classList.add('text-gray-400');
       this._errorMsg.textContent = '';
       this._insertBtn.disabled = true;
@@ -315,7 +316,7 @@ export class FormulaModal {
       this._errorMsg.textContent = '';
       this._insertBtn.disabled = false;
     } catch (error) {
-      this._preview.textContent = t('modal.invalid_formula');
+      this._preview.textContent = tx('Geçersiz formül');
       this._preview.classList.add('text-gray-400');
       this._errorMsg.textContent = error.message;
       this._insertBtn.disabled = true;

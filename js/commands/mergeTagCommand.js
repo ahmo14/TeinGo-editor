@@ -1,13 +1,14 @@
 import { BaseCommand } from './baseCommand.js';
 import { PromptModal } from '../promptModal.js';
-import { t } from '../i18n.js';
+
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
 
 export class MergeTagCommand extends BaseCommand {
   constructor() {
     super({
       name: 'insertMergeTag',
       icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h8"/><path d="M12 8v8"/><path d="M4 12h.01"/><path d="M20 12h.01"/></svg>',
-      title: 'Birleştirme Etiketi',
+      title: tx('Birleştirme Etiketi'),
       shortcut: null,
       tag: 'SPAN',
     });
@@ -15,7 +16,7 @@ export class MergeTagCommand extends BaseCommand {
 
   async execute(editor) {
     editor.saveSelection();
-    const tag = await PromptModal.show(t('modal.merge_tag_prompt') || 'Etiket adını girin (ör. ISIM, TARIH):', '', t('menu.mergeTag') || 'Birleştirme Etiketi');
+    const tag = await PromptModal.show(tx('Etiket adını girin (ör. ISIM, TARIH):'), '', tx('Birleştirme Etiketi'));
     if (!tag) {
       editor.restoreSelection();
       return;

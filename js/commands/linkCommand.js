@@ -1,6 +1,7 @@
 import { BaseCommand } from './baseCommand.js';
 import { PromptModal } from '../promptModal.js';
-import { t } from '../i18n.js';
+
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
 
 /**
  * LinkCommand - Seçili metni <a href="..." target="_blank"> bağlantısına dönüştürür.
@@ -18,7 +19,7 @@ export class LinkCommand extends BaseCommand {
     super({
       name: 'insertLink',
       icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-      title: 'Bağlantı Ekle (Ctrl+K)',
+      title: tx('Bağlantı Ekle (Ctrl+K)'),
       shortcut: 'ctrl+k',
       tag: 'A',
     });
@@ -38,7 +39,7 @@ export class LinkCommand extends BaseCommand {
     editor.saveSelection();
 
     // URL sor
-    const url = await PromptModal.show(t('modal.link_prompt') || 'Bağlantı URL\\'si girin:', 'https://', t('menu.link') || 'Bağlantı Ekle');
+    const url = await PromptModal.show(tx('Bağlantı URL\'si girin:'), 'https://', tx('Bağlantı Ekle'));
 
     // İptal edildiyse hiçbir şey yapma
     if (!url || url === 'https://') return;

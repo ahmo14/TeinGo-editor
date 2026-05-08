@@ -1,5 +1,7 @@
 import { BaseCommand } from './baseCommand.js';
 
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+
 /**
  * AlignCommand - İmlecin bulunduğu blok elementinin metin hizalamasını değiştirir.
  *
@@ -39,7 +41,7 @@ export class AlignCommand extends BaseCommand {
     super({
       name: `align-${alignment}`,
       icon: config.icon,
-      title: config.title,
+      title: tx(config.title),
       shortcut: null,
       tag: null, // Hizalama tag bazlı aktif durum takibi yapmaz
     });

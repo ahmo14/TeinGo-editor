@@ -12,8 +12,6 @@
  * - fetch çağrısının yorumunu aç
  */
 
-import { t } from './i18n.js';
-
 /** @type {string} Backend API endpoint'i */
 const API_ENDPOINT = '/api/contents/save';
 
@@ -92,7 +90,7 @@ export function getCleanHTML(editorElement) {
   clone.querySelectorAll('p').forEach((p) => {
     const text = p.textContent.trim();
     const hasOnlyBr = p.innerHTML.trim() === '<br>' || p.innerHTML.trim() === '';
-    const hasChildren = p.querySelector('img, video, audio, table, .formula-inline, .embed-wrapper');
+    const hasChildren = p.querySelector('img, table, .formula-inline, .embed-wrapper');
 
     if (!text && hasOnlyBr && !hasChildren) {
       p.remove();
@@ -187,7 +185,7 @@ function extractTitle(editorElement) {
     return fallback.length > 50 ? `${fallback.substring(0, 50)}...` : fallback;
   }
 
-  return t('modal.untitled_content') || 'Başlıksız İçerik';
+  return 'Başlıksız İçerik';
 }
 
 // ──────────────────────────────────────────────
@@ -236,7 +234,7 @@ export async function saveContent(payload) {
 
   return {
     success: true,
-    message: t('modal.content_saved_success') || 'İçerik başarıyla kaydedildi.',
+    message: 'İçerik başarıyla kaydedildi.',
   };
 
   // ──────────────────────────────────────────────

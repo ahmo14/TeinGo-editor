@@ -10,9 +10,20 @@
  * document.execCommand KULLANILMIYOR.
  * Tüm metin manipülasyonu Selection/Range API ile yapılır.
  */
-import { t } from './i18n.js';
-
 const MEDIA_SELECTOR = 'img, video, audio, .embed-wrapper';
+
+const RESIZE_HANDLES = [
+  { name: 'nw', cursor: 'nw-resize', fx: 0,   fy: 0   },
+  { name: 'n',  cursor: 'n-resize',  fx: 0.5, fy: 0   },
+  { name: 'ne', cursor: 'ne-resize', fx: 1,   fy: 0   },
+  { name: 'w',  cursor: 'w-resize',  fx: 0,   fy: 0.5 },
+  { name: 'e',  cursor: 'e-resize',  fx: 1,   fy: 0.5 },
+  { name: 'sw', cursor: 'sw-resize', fx: 0,   fy: 1   },
+  { name: 's',  cursor: 's-resize',  fx: 0.5, fy: 1   },
+  { name: 'se', cursor: 'se-resize', fx: 1,   fy: 1   },
+];
+const HANDLE_SIZE = 10;
+const MIN_MEDIA_SIZE = 40;
 
 export class EditorCore {
   /**
@@ -34,66 +45,19 @@ export class EditorCore {
     /** @type {HTMLButtonElement|null} */
     this._mediaDeleteButton = null;
 
-    this._positionSelectedMediaControls = () => this._positionMediaDeleteButton();
+    /** @type {HTMLElement[]} */
+    this._resizeHandleEls = [];
+
+    /** @type {object|null} */
+    this._resizeDragState = null;
+
+    this._positionSelectedMediaControls = () => {
+      this._positionMediaDeleteButton();
+      this._positionResizeHandles();
+    };
 
     /** @type {Set<(commandName: string) => void>} */
     this._listeners = new Set();
-
-    // Medya elemanlarının native selection (mavi overlay) almasını engellemek için global stil
-    if (!document.getElementById('editor-core-styles')) {
-      const style = document.createElement('style');
-      style.id = 'editor-core-styles';
-      style.innerHTML = `
-        #editor img,
-        #editor video,
-        #editor audio,
-        .editor-content img,
-        .editor-content video,
-        .editor-content audio {
-          max-width: 100%;
-          height: auto;
-          cursor: pointer;
-        }
-        #editor img:hover,
-        #editor video:hover,
-        #editor audio:hover,
-        #editor .embed-wrapper:hover,
-        .editor-content img:hover,
-        .editor-content video:hover,
-        .editor-content audio:hover,
-        .editor-content .embed-wrapper:hover {
-          outline: 2px solid rgba(59, 130, 246, 0.4);
-          outline-offset: 2px;
-        }
-        .editor-media-selected::selection { background: transparent !important; }
-        .editor-media-selected::-moz-selection { background: transparent !important; }
-        img.editor-media-selected,
-        video.editor-media-selected,
-        audio.editor-media-selected,
-        .embed-wrapper.editor-media-selected {
-          outline: 2px solid #3b82f6 !important;
-          outline-offset: 3px !important;
-          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18) !important;
-          user-select: none !important;
-          -webkit-user-select: none !important;
-        }
-        .embed-wrapper {
-          position: relative;
-          cursor: pointer;
-        }
-        .embed-wrapper::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: transparent;
-          pointer-events: auto;
-        }
-        .cre-media-delete-button:hover {
-          background: #b91c1c !important;
-        }
-      `;
-      document.head.appendChild(style);
-    }
 
     this._setupEventListeners();
   }
@@ -665,6 +629,7 @@ export class EditorCore {
    * @param {'left'|'center'|'right'|'justify'} alignment
    */
   setBlockAlignment(alignment) {
+    // Seçili medya varsa parent bloğa text-align uygula, medyayı inline-block yap
     let targetMedia = this._selectedMedia || this.editorElement.querySelector('.editor-media-selected');
 
     if (!targetMedia) {
@@ -683,23 +648,20 @@ export class EditorCore {
     }
 
     if (targetMedia) {
-      targetMedia.style.display = 'inline-block';
-      targetMedia.style.marginLeft  = '';
-      targetMedia.style.marginRight = '';
-
-      const blockTags = ['P','DIV','H1','H2','H3','H4','H5','H6','LI','BLOCKQUOTE'];
-      let parentBlock = targetMedia.parentElement;
-      while (parentBlock && parentBlock !== this.editorElement && !blockTags.includes(parentBlock.tagName)) {
-        parentBlock = parentBlock.parentElement;
-      }
-      if (!parentBlock || parentBlock === this.editorElement) {
-        const p = document.createElement('p');
-        p.style.textAlign = alignment;
-        targetMedia.parentNode.insertBefore(p, targetMedia);
-        p.appendChild(targetMedia);
+      // display:block + margin ile hizala — parent text-align'a bağımlılık olmadan
+      targetMedia.style.display = 'block';
+      if (alignment === 'center') {
+        targetMedia.style.marginLeft  = 'auto';
+        targetMedia.style.marginRight = 'auto';
+      } else if (alignment === 'right') {
+        targetMedia.style.marginLeft  = 'auto';
+        targetMedia.style.marginRight = '0';
       } else {
-        parentBlock.style.textAlign = alignment;
+        // left veya justify
+        targetMedia.style.marginLeft  = '0';
+        targetMedia.style.marginRight = 'auto';
       }
+      requestAnimationFrame(() => this._positionSelectedMediaControls());
       return;
     }
 
@@ -711,17 +673,47 @@ export class EditorCore {
     }
 
     if (block.matches && block.matches(MEDIA_SELECTOR)) {
-      block.style.display = 'inline-block';
-      block.style.marginLeft  = '';
-      block.style.marginRight = '';
-      const p = document.createElement('p');
-      p.style.textAlign = alignment;
-      block.parentNode.insertBefore(p, block);
-      p.appendChild(block);
+      block.style.display = 'block';
+      if (alignment === 'center') {
+        block.style.marginLeft  = 'auto';
+        block.style.marginRight = 'auto';
+      } else if (alignment === 'right') {
+        block.style.marginLeft  = 'auto';
+        block.style.marginRight = '0';
+      } else {
+        block.style.marginLeft  = '0';
+        block.style.marginRight = 'auto';
+      }
+      requestAnimationFrame(() => this._positionSelectedMediaControls());
       return;
     }
 
     block.style.textAlign = alignment;
+
+    // Blok içinde display:block medya varsa onları da margin ile hizala
+    block.querySelectorAll(MEDIA_SELECTOR).forEach(m => {
+      if (m.style.display === 'block' || window.getComputedStyle(m).display === 'block') {
+        if (alignment === 'center') {
+          m.style.marginLeft = 'auto'; m.style.marginRight = 'auto';
+        } else if (alignment === 'right') {
+          m.style.marginLeft = 'auto'; m.style.marginRight = '0';
+        } else {
+          m.style.marginLeft = '0'; m.style.marginRight = 'auto';
+        }
+      }
+    });
+
+    // mousedown'da uygulanan textAlign'dan sonra browser cursor pozisyonunu
+    // hemen güncellemeyebilir — requestAnimationFrame ile selection'ı tazele
+    requestAnimationFrame(() => {
+      this._positionSelectedMediaControls();
+      const sel = this.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const r = sel.getRangeAt(0).cloneRange();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    });
   }
 
   // ──────────────────────────────────────────────
@@ -982,6 +974,7 @@ export class EditorCore {
     if (selection) selection.removeAllRanges();
 
     this._showMediaDeleteButton();
+    this._showResizeHandles();
     this._notifyListeners('selectionchange');
   }
 
@@ -996,6 +989,7 @@ export class EditorCore {
       this._selectedMedia = null;
     }
     this._hideMediaDeleteButton();
+    this._hideResizeHandles();
   }
 
   /** @private */
@@ -1005,8 +999,8 @@ export class EditorCore {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'cre-media-delete-button';
-    button.textContent = t('modal.delete') || 'Sil';
-    button.title = t('modal.delete_media') || 'Medyayı sil';
+    button.textContent = 'Sil';
+    button.title = 'Medyayı sil';
     button.style.cssText = [
       'position: fixed',
       'display: none',
@@ -1103,6 +1097,111 @@ export class EditorCore {
   }
 
   // ──────────────────────────────────────────────
+  // Resize Handles
+  // ──────────────────────────────────────────────
+
+  /** @private */
+  _ensureResizeHandles() {
+    if (this._resizeHandleEls.length) return this._resizeHandleEls;
+    RESIZE_HANDLES.forEach(def => {
+      const el = document.createElement('div');
+      el.style.cssText = [
+        'position: fixed',
+        'display: none',
+        `width: ${HANDLE_SIZE}px`,
+        `height: ${HANDLE_SIZE}px`,
+        'background: #3b82f6',
+        'border: 2px solid #fff',
+        'border-radius: 2px',
+        `cursor: ${def.cursor}`,
+        'z-index: 2147483646',
+        'box-shadow: 0 1px 4px rgba(0,0,0,0.3)',
+        'touch-action: none',
+        'user-select: none',
+      ].join('; ');
+      el.setAttribute('data-resize-handle', def.name);
+      el.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._startResizeDrag(def, e);
+      });
+      document.body.appendChild(el);
+      this._resizeHandleEls.push(el);
+    });
+    return this._resizeHandleEls;
+  }
+
+  /** @private */
+  _showResizeHandles() {
+    this._ensureResizeHandles();
+    this._resizeHandleEls.forEach(el => { el.style.display = 'block'; });
+    this._positionResizeHandles();
+  }
+
+  /** @private */
+  _hideResizeHandles() {
+    this._resizeHandleEls.forEach(el => { el.style.display = 'none'; });
+  }
+
+  /** @private */
+  _positionResizeHandles() {
+    if (!this._selectedMedia || !this._resizeHandleEls.length) return;
+    const rect = this._selectedMedia.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) { this._hideResizeHandles(); return; }
+    this._resizeHandleEls.forEach((el, i) => {
+      if (el.style.display === 'none') return;
+      const def = RESIZE_HANDLES[i];
+      el.style.left = `${rect.left + def.fx * rect.width - HANDLE_SIZE / 2}px`;
+      el.style.top  = `${rect.top  + def.fy * rect.height - HANDLE_SIZE / 2}px`;
+    });
+  }
+
+  /** @private */
+  _startResizeDrag(def, e) {
+    const media = this._selectedMedia;
+    if (!media) return;
+    const rect = media.getBoundingClientRect();
+    this._resizeDragState = { def, media, startX: e.clientX, startY: e.clientY, startW: rect.width, startH: rect.height };
+
+    const onMove = (ev) => {
+      if (!this._resizeDragState) return;
+      const { def: d, media: m, startX, startY, startW, startH } = this._resizeDragState;
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      const hasE = d.name.includes('e'), hasW = d.name.includes('w');
+      const hasS = d.name.includes('s'), hasN = d.name.includes('n');
+
+      if ((hasS || hasN) && !hasE && !hasW) {
+        const dh = hasS ? dy : -dy;
+        m.style.height = `${Math.max(MIN_MEDIA_SIZE, startH + dh)}px`;
+      } else {
+        const dw = hasE ? dx : hasW ? -dx : 0;
+        const newW = Math.max(MIN_MEDIA_SIZE, startW + dw);
+        m.style.width = `${newW}px`;
+        if (m.tagName !== 'IMG') {
+          m.style.height = `${Math.max(MIN_MEDIA_SIZE, (newW / startW) * startH)}px`;
+        } else {
+          m.style.height = 'auto';
+        }
+      }
+      this._positionResizeHandles();
+      this._positionMediaDeleteButton();
+    };
+
+    const onUp = () => {
+      this._resizeDragState = null;
+      document.body.style.cursor = '';
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      this.editorElement.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    document.body.style.cursor = def.cursor;
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  }
+
+  // ──────────────────────────────────────────────
   // Event Listeners
   // ──────────────────────────────────────────────
 
@@ -1119,9 +1218,11 @@ export class EditorCore {
 
     // Medya dışına tıklandığında seçimi kaydet ve medyaları temizle
     this.editorElement.addEventListener('mouseup', (e) => {
+      if (this._resizeDragState) return;
       if (this._getMediaTarget(e.target)) return;
 
       this._clearSelectedMedia();
+
       this.saveSelection();
       this._notifyListeners('selectionchange');
     });
@@ -1132,7 +1233,7 @@ export class EditorCore {
       this._notifyListeners('selectionchange');
     });
 
-    // Klavye kısayolları ve Silme İşlemi (Backspace/Delete)
+    // Klavye kısayolları + seçili medyayı Delete/Backspace ile sil
     this.editorElement.addEventListener('keydown', (e) => {
       if ((e.key === 'Backspace' || e.key === 'Delete') && this._selectedMedia) {
         e.preventDefault();

@@ -1,42 +1,44 @@
 import { BaseCommand } from './baseCommand.js';
-import { PromptModal } from '../promptModal.js';
-import { t } from '../i18n.js';
+import { openMediaPicker } from '../mediaPickerModal.js';
+
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
 
 export class VideoCommand extends BaseCommand {
   constructor() {
     super({
-      name: 'insertVideo',
-      icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>',
-      title: t('menu.video') || 'Video Ekle',
+      name:     'insertVideo',
+      icon:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>',
+      title:    tx('Video Ekle'),
       shortcut: null,
-      tag: 'VIDEO',
+      tag:      'VIDEO',
     });
   }
 
-  async execute(editor) {
+  execute(editor) {
     editor.saveSelection();
-    const promptText = t('modal.videoUrlPrompt') !== 'modal.videoUrlPrompt' ? t('modal.videoUrlPrompt') : 'Video URL\'sini girin (MP4, WebM vb.):';
-    const url = await PromptModal.show(promptText, '', t('menu.video') || 'Video Ekle');
-    if (!url) {
+
+    openMediaPicker('video').then(result => {
+      if (!result) {
+        editor.restoreSelection();
+        return;
+      }
       editor.restoreSelection();
-      return;
-    }
+      this._insertVideo(editor, result.location);
+    });
+  }
 
-    editor.restoreSelection();
-    
-    try {
-      const video = document.createElement('video');
-      video.src = url;
-      video.controls = true;
-      video.contentEditable = 'false'; // <-- Burası eklendi
-      video.style.maxWidth = '100%';
-      video.style.borderRadius = '8px';
-      video.style.margin = '1em 0';
-      video.style.display = 'inline-block';
+  _insertVideo(editor, src) {
+    const video = document.createElement('video');
+    video.src          = src;
+    video.controls     = true;
+    video.playsInline  = true;
+    video.preload      = 'metadata';
+    video.style.maxWidth     = '100%';
+    video.style.borderRadius = '8px';
+    video.style.margin       = '1em 0';
+    video.style.display      = 'block';
 
-      editor.insertNodeAtCursor(video);
-    } catch (e) {
-      console.error('Video ekleme hatası:', e);
-    }
+    editor.insertNodeAtCursor(video);
+    editor.setCursorAfter(video);
   }
 }

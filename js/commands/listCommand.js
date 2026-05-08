@@ -1,5 +1,7 @@
 import { BaseCommand } from './baseCommand.js';
 
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+
 /**
  * ListCommand - İmlecin bulunduğu bloğu sıralı veya sırasız listeye dönüştürür.
  *
@@ -26,7 +28,7 @@ export class ListCommand extends BaseCommand {
     super({
       name: overrides.name || defaultName,
       icon: overrides.icon || defaultIcon,
-      title: overrides.title || defaultTitle,
+      title: tx(overrides.title || defaultTitle),
       shortcut: overrides.shortcut || null,
       tag: listType.toUpperCase(),
     });

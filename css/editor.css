@@ -1,0 +1,306 @@
+/* ── Editor Wrapper ──────────────────────────────────────────────────────────── */
+.cre-wrapper {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    overflow: visible;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+/* Tarayıcı varsayılan <button> kenarlığını sıfırla (Tailwind preflight olmadan) */
+.cre-wrapper button {
+    border: none;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* ── Toolbar & Menubar buton hover efektleri ─────────────────────────────────── */
+.cre-toolbar-bar button,
+.cre-menubar button {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease,
+                transform 0.1s ease, color 0.15s ease;
+}
+
+.cre-toolbar-bar button:hover,
+.cre-menubar button:hover {
+    background-color: rgba(239, 246, 255, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+    transform: translateY(-1px);
+    color: #2563eb;
+}
+
+.cre-toolbar-bar button:active,
+.cre-menubar button:active {
+    transform: translateY(0);
+    box-shadow: none;
+    background-color: rgba(219, 234, 254, 0.8);
+}
+
+/* ── Menu Bar ────────────────────────────────────────────────────────────────── */
+.cre-menubar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.25rem 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+    background: #ffffff;
+    border-radius: 0.5rem 0.5rem 0 0;
+    position: relative;
+    z-index: 11;
+}
+
+/* ── Toolbar Bar ─────────────────────────────────────────────────────────────── */
+.cre-toolbar-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.375rem 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+    background: #f8f9fa;
+    border-radius: 0;
+    position: relative;
+    z-index: 10;
+}
+
+/* ── Editor Content Area ─────────────────────────────────────────────────────── */
+.cre-editor-area {
+    padding: 1rem 1.25rem;
+    min-height: 200px;
+    max-height: 85vh;
+    overflow-y: auto;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #1e293b;
+    resize: vertical;
+    outline: none;
+}
+
+.cre-editor-area:empty::before {
+    content: attr(data-placeholder);
+    color: #adb5bd;
+    pointer-events: none;
+    font-style: italic;
+}
+
+.cre-editor-area ::selection {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: inherit;
+}
+
+/* ── Source Code Textarea ────────────────────────────────────────────────────── */
+.cre-source-editor {
+    width: 100%;
+    padding: 1.25rem;
+    min-height: 300px;
+    max-height: 60vh;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #334155;
+    background: #f8fafc;
+    border: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    resize: none;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    tab-size: 2;
+}
+.cre-source-editor:focus {
+    outline: none;
+}
+
+/* ── Modal animation (used by alertModal, formulaModal, etc.) ────────────────── */
+.modal-visible {
+    opacity: 1 !important;
+}
+.modal-visible > div {
+    transform: scale(1) !important;
+}
+
+/* ── Formula inline (KaTeX) ──────────────────────────────────────────────────── */
+.editor-content .formula-inline {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 2px 4px;
+    margin: 0 2px;
+    border-radius: 3px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    cursor: default;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+.editor-content .formula-inline:hover {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+/* ── Editor content element styles ──────────────────────────────────────────── */
+.editor-content strong { font-weight: 700; }
+.editor-content em { font-style: italic; }
+.editor-content u { text-decoration: underline; }
+.editor-content s { text-decoration: line-through; }
+.editor-content sub { font-size: 0.75em; vertical-align: sub; }
+.editor-content sup { font-size: 0.75em; vertical-align: super; }
+
+.editor-content a {
+    color: #2563eb;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+.editor-content a:hover { color: #1d4ed8; }
+
+.editor-content blockquote {
+    border-left: 4px solid #cbd5e1;
+    padding: 0.5rem 1rem;
+    margin: 1rem 0;
+    color: #64748b;
+    font-style: italic;
+    background: #f8fafc;
+    border-radius: 0 4px 4px 0;
+}
+
+.editor-content h1 { font-size: 2em;    font-weight: 700; line-height: 1.2; margin: 0.75em 0 0.4em; color: #0f172a; }
+.editor-content h2 { font-size: 1.5em;  font-weight: 700; line-height: 1.3; margin: 0.75em 0 0.4em; color: #1e293b; }
+.editor-content h3 { font-size: 1.25em; font-weight: 600; line-height: 1.4; margin: 0.6em  0 0.3em; color: #334155; }
+.editor-content h4 { font-size: 1.1em;  font-weight: 600; line-height: 1.4; margin: 0.5em  0 0.3em; color: #475569; }
+.editor-content h5 { font-size: 1em;    font-weight: 600; line-height: 1.5; margin: 0.4em  0 0.25em; }
+.editor-content h6 { font-size: 0.875em;font-weight: 600; line-height: 1.5; margin: 0.4em  0 0.25em; }
+.editor-content p  { margin: 0.4em 0; }
+
+.editor-content ul { list-style-type: disc;    padding-left: 1.5em; margin: 0.4em 0; }
+.editor-content ol { list-style-type: decimal; padding-left: 1.5em; margin: 0.4em 0; }
+.editor-content li { margin: 0.2em 0; }
+
+.editor-content img,
+.editor-content video,
+.editor-content audio {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 0.5em 0;
+    display: block;
+    cursor: pointer;
+}
+.editor-content img:hover,
+.editor-content video:hover,
+.editor-content audio:hover,
+.editor-content .embed-wrapper:hover {
+    outline: 2px solid rgba(59, 130, 246, 0.4);
+    outline-offset: 2px;
+}
+.editor-content img.editor-media-selected,
+.editor-content video.editor-media-selected,
+.editor-content audio.editor-media-selected,
+.editor-content .embed-wrapper.editor-media-selected {
+    outline: 2px solid #3b82f6;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
+}
+
+.editor-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75em 0;
+}
+.editor-content td,
+.editor-content th {
+    border: 1px solid #d1d5db;
+    padding: 8px 12px;
+    min-height: 1.5em;
+    vertical-align: top;
+}
+.editor-content td:focus,
+.editor-content th:focus {
+    outline: none;
+    background-color: #eff6ff;
+}
+
+.editor-content .embed-wrapper {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    cursor: pointer;
+}
+.editor-content .embed-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    pointer-events: auto;
+}
+.editor-content .embed-wrapper:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.cre-media-delete-button:hover {
+    background: #b91c1c !important;
+}
+
+.editor-content a.editor-anchor {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #f1f5f9;
+    border: 1px dashed #94a3b8;
+    border-radius: 2px;
+    vertical-align: middle;
+    cursor: default;
+    position: relative;
+    margin: 0 2px;
+}
+.editor-content a.editor-anchor::after {
+    content: "⚓";
+    font-size: 10px;
+    position: absolute;
+    top: -2px;
+    left: 2px;
+    color: #64748b;
+}
+
+.editor-content details.editor-accordion {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin: 1em 0;
+}
+.editor-content details.editor-accordion > summary {
+    padding: 10px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    outline: none;
+    list-style: none;
+}
+.editor-content details.editor-accordion[open] > summary {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+.editor-content details.editor-accordion > summary::-webkit-details-marker { display: none; }
+.editor-content details.editor-accordion > summary::before {
+    content: '▶';
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 0.8em;
+    transition: transform 0.2s;
+}
+.editor-content details.editor-accordion[open] > summary::before {
+    transform: rotate(90deg);
+}
+.editor-content details.editor-accordion > .accordion-content {
+    padding: 12px 16px;
+}
+
+/* ── Spinner (image upload placeholder) ──────────────────────────────────────── */
+@keyframes cre-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}

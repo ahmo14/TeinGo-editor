@@ -43,8 +43,13 @@ import { FootnoteCommand }   from './commands/footnoteCommand.js';
 import { CommentCommand }    from './commands/commentCommand.js';
 import { TocCommand }        from './commands/tocCommand.js';
 import { VideoCommand }      from './commands/videoCommand.js';
+import { AudioCommand }      from './commands/audioCommand.js';
 import { MergeTagCommand }   from './commands/mergeTagCommand.js';
 import { getCleanHTML }      from './contentService.js';
+
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+const txf = (source, ...args) => tx(source).replace(/\{(\d+)\}/g, (_, i) => args[i] ?? '');
+const MAX_IMAGE_SIZE_MB = 5;
 
 // ── Instance registry ─────────────────────────────────────────────────────────
 /** @type {Map<string, EditorInstance>} Maps textarea.id → EditorInstance */
@@ -236,11 +241,13 @@ function setupEditor(core, toolbar, menuBar) {
   const commentCmd   = new CommentCommand();
   const tocCmd       = new TocCommand();
   const videoCmd     = new VideoCommand();
+  const audioCmd     = new AudioCommand();
   const mergeTagCmd  = new MergeTagCommand();
   core.registerCommand('insertFootnote',  footnoteCmd);
   core.registerCommand('insertComment',   commentCmd);
   core.registerCommand('insertToc',       tocCmd);
   core.registerCommand('insertVideo',     videoCmd);
+  core.registerCommand('insertAudio',     audioCmd);
   core.registerCommand('insertMergeTag',  mergeTagCmd);
 
   // Build toolbar
@@ -265,6 +272,7 @@ function setupEditor(core, toolbar, menuBar) {
   toolbar.addButton(linkCmd);
   toolbar.addSeparator();
   toolbar.addButton(imageCmd);
+  toolbar.addButton(audioCmd);
   toolbar.addButton(formulaCmd);
   toolbar.addButton(tableCmd);
   toolbar.addButton(embedCmd);
@@ -276,7 +284,7 @@ function setupEditor(core, toolbar, menuBar) {
   if (menuBar) {
     menuBar.addMenu(t('menu.file'), [
       { label: t('menu.newDoc'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', action: (ed) => { ed.editorElement.innerHTML = ''; } },
-      { label: t('menu.preview'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', action: () => AlertModal.show(t('modal.preview_soon') || 'Önizleme özelliği yakında eklenecek!', t('modal.info') || 'Bilgi') },
+      { label: t('menu.preview'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', action: () => AlertModal.show(t('modal.info'), t('modal.info')) },
       'separator',
       { label: t('menu.print'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>', shortcut: 'Ctrl+P', action: () => window.print() },
     ]);
@@ -287,7 +295,7 @@ function setupEditor(core, toolbar, menuBar) {
       'separator',
       { label: t('menu.cut'),      icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>', shortcut: 'Ctrl+X', action: () => document.execCommand('cut') },
       { label: t('menu.copy'),  icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>', shortcut: 'Ctrl+C', action: () => document.execCommand('copy') },
-      { label: t('menu.paste'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>', shortcut: 'Ctrl+V', action: async () => { try { const clipboardText = await navigator.clipboard.readText(); document.execCommand('insertText', false, clipboardText); } catch { AlertModal.show(t('modal.paste_error') || 'Tarayıcı güvenlik politikası nedeniyle yapıştırmak için klavyeden Ctrl+V kullanın.', t('modal.info') || 'Bilgi'); } } },
+      { label: t('menu.paste'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>', shortcut: 'Ctrl+V', action: async () => { try { const text = await navigator.clipboard.readText(); document.execCommand('insertText', false, text); } catch { AlertModal.show(tx('Tarayıcı güvenlik politikası nedeniyle yapıştırmak için klavyeden Ctrl+V kullanın.'), t('modal.info')); } } },
       'separator',
       { label: t('menu.selectAll'), icon: '📝', shortcut: 'Ctrl+A', action: () => document.execCommand('selectAll') },
     ]);
@@ -299,6 +307,7 @@ function setupEditor(core, toolbar, menuBar) {
     menuBar.addMenu(t('menu.insert'), [
       { label: t('menu.image'),             icon: imageCmd.icon,       commandName: 'insertImage' },
       { label: t('menu.video'),             icon: videoCmd.icon,       commandName: 'insertVideo' },
+      { label: tx('Ses Ekle'),              icon: audioCmd.icon,       commandName: 'insertAudio' },
       { label: t('menu.link'),   icon: linkCmd.icon,        commandName: 'insertLink',        shortcut: 'Ctrl+K' },
       { label: t('menu.media'),             icon: embedCmd.icon,       commandName: 'embedMedia' },
       { label: t('menu.comment'),          icon: commentCmd.icon,     commandName: 'insertComment',   shortcut: 'Ctrl+Alt+M' },
@@ -488,7 +497,23 @@ function normalizeHtml(html) {
 function _readJsonResponse(response) {
   const ct = response.headers.get('content-type') || '';
   if (ct.toLowerCase().includes('application/json')) return response.json();
-  return response.text().then(() => { throw new Error(`Sunucu hatası: ${response.status}`); });
+  return response.text().then(() => { throw new Error(txf('Sunucu hatası: {0}', response.status)); });
+}
+
+function _isNetworkFetchError(error) {
+  const message = String(error?.message || '');
+  return error instanceof TypeError
+    || message === 'Failed to fetch'
+    || message === 'Load failed'
+    || /NetworkError/i.test(message);
+}
+
+function _imageUploadConnectionError() {
+  return new Error(tx('Görsel yükleme bağlantısı kurulamadı. Lütfen görsel boyutunu küçültüp tekrar deneyin.'));
+}
+
+function _localImageReadError() {
+  return new Error(tx('Görsel tarayıcıdan okunamadı. Lütfen görseli bilgisayarınızdan yeniden yükleyin.'));
 }
 
 function _normalizeSourceUrl(src) {
@@ -506,14 +531,26 @@ function _isImportCandidate(src) {
   try { return new URL(s, location.origin).origin !== location.origin; } catch { return false; }
 }
 
+function _csrfToken() {
+  return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
+
 function _uploadImageBlob(blob, fileName) {
+  if (blob && blob.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+    return Promise.reject(new Error(txf('Dosya boyutu çok büyük ({0}MB). Maksimum: {1}MB', (blob.size / 1024 / 1024).toFixed(1), MAX_IMAGE_SIZE_MB)));
+  }
+
   const fd = new FormData();
   fd.append('file', blob, fileName || 'gorsel.png');
-  return fetch('/Upload/Image', { method: 'POST', body: fd, credentials: 'same-origin' })
+  return fetch('/Upload/Image', { method: 'POST', body: fd, credentials: 'same-origin', headers: { 'RequestVerificationToken': _csrfToken() } })
     .then(_readJsonResponse)
     .then(data => {
       if (data.location) return data.location;
-      throw new Error((data && data.error) || 'Görsel yüklenemedi.');
+      throw new Error((data && data.error) || tx('Görsel yüklenemedi.'));
+    })
+    .catch(error => {
+      if (_isNetworkFetchError(error)) throw _imageUploadConnectionError();
+      throw error;
     });
 }
 
@@ -521,20 +558,30 @@ function _importRemoteImage(url) {
   return fetch('/Upload/ImportImage', {
     method: 'POST',
     credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': _csrfToken() },
     body: JSON.stringify({ imageUrl: url }),
   })
     .then(_readJsonResponse)
     .then(data => {
       if (data.location) return data.location;
-      throw new Error((data && data.error) || 'Harici görsel içe alınamadı.');
+      throw new Error((data && data.error) || tx('Harici görsel içe alınamadı.'));
+    })
+    .catch(error => {
+      if (_isNetworkFetchError(error)) throw _imageUploadConnectionError();
+      throw error;
     });
 }
 
 function _importImageSource(src) {
   const s = _normalizeSourceUrl(src);
   if (s.startsWith('data:') || s.startsWith('blob:')) {
-    return fetch(s).then(r => r.blob()).then(blob => _uploadImageBlob(blob, 'yapistirilan.png'));
+    return fetch(s)
+      .catch(() => { throw _localImageReadError(); })
+      .then(response => {
+        if (!response.ok) throw _localImageReadError();
+        return response.blob();
+      })
+      .then(blob => _uploadImageBlob(blob, 'pasted.png'));
   }
   return _importRemoteImage(s);
 }
@@ -639,23 +686,27 @@ function initMediaPanel(options) {
 
   function _uploadMediaFile(file) {
     const kind = _resolveMediaKind(file);
-    status.textContent = `Yükleniyor: ${file.name}…`;
+    status.textContent = txf('Yükleniyor: {0}', file.name) + '…';
     const fd = new FormData();
     fd.append('file', file);
     fetch(kind === 'video' ? '/Upload/Video' : '/Upload/Image', {
-      method: 'POST', body: fd, credentials: 'same-origin',
+      method: 'POST', body: fd, credentials: 'same-origin', headers: { 'RequestVerificationToken': _csrfToken() },
     })
       .then(_readJsonResponse)
       .then(data => {
         if (data.location) {
-          status.textContent = '✓ Yüklendi';
+          status.textContent = '✓ ' + tx('Yüklendi');
           setTimeout(() => { status.textContent = ''; }, 2000);
           _addToGallery(data.location, file.name, kind);
         } else {
-          status.textContent = '✗ ' + ((data && data.error) || 'Yükleme başarısız.');
+          status.textContent = '✗ ' + ((data && data.error) || tx('Yükleme başarısız.'));
         }
       })
-      .catch(err => { status.textContent = '✗ ' + ((err && err.message) || 'Yükleme başarısız.'); });
+      .catch(err => {
+        status.textContent = '✗ ' + (_isNetworkFetchError(err)
+          ? tx('Görsel yükleme bağlantısı kurulamadı. Lütfen görsel boyutunu küçültüp tekrar deneyin.')
+          : ((err && err.message) || tx('Yükleme başarısız.')));
+      });
   }
 
   function _addToGallery(url, name, kind) {
@@ -665,13 +716,13 @@ function initMediaPanel(options) {
     wrap.className  = 'position-relative';
     wrap.style.width = '110px';
     const preview = kind === 'video'
-      ? '<div style="width:110px;height:68px;border-radius:6px;border:1.5px solid #e2e8f0;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;">Video</div>'
+      ? `<div style="width:110px;height:68px;border-radius:6px;border:1.5px solid #e2e8f0;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;">${tx('Video')}</div>`
       : `<img src="${url}" alt="${name}" style="width:110px;height:68px;object-fit:cover;border-radius:6px;border:1.5px solid #e2e8f0;display:block;">`;
     wrap.innerHTML = [
       preview,
       '<div class="d-flex gap-1 mt-1">',
-      `  <button type="button" class="btn btn-xs flex-fill py-0 media-insert-btn" style="font-size:.7rem;background:#f1f5f9;border:1px solid #e2e8f0;" data-url="${url}" data-media-kind="${kind}" title="Aktif editöre ekle"><i class="bi bi-plus-lg"></i> Ekle</button>`,
-      `  <button type="button" class="btn btn-xs py-0 media-copy-btn" style="font-size:.7rem;background:#f1f5f9;border:1px solid #e2e8f0;" data-url="${url}" title="URL kopyala"><i class="bi bi-link-45deg"></i></button>`,
+      `  <button type="button" class="btn btn-xs flex-fill py-0 media-insert-btn" style="font-size:.7rem;background:#f1f5f9;border:1px solid #e2e8f0;" data-url="${url}" data-media-kind="${kind}" title="${tx('Aktif editöre ekle')}"><i class="bi bi-plus-lg"></i> ${tx('Ekle')}</button>`,
+      `  <button type="button" class="btn btn-xs py-0 media-copy-btn" style="font-size:.7rem;background:#f1f5f9;border:1px solid #e2e8f0;" data-url="${url}" title="${tx('URL kopyala')}"><i class="bi bi-link-45deg"></i></button>`,
       '</div>',
     ].join('');
     gallery.appendChild(wrap);
@@ -687,7 +738,7 @@ function initMediaPanel(options) {
       return;
     }
     const inst = _lastFocused || _instances.get(_mediaPanel.fallbackEditorId);
-    if (!inst) { alert("Önce bir metin alanına tıklayın, sonra Ekle'ye basın."); return; }
+    if (!inst) { alert(tx("Önce bir metin alanına tıklayın, sonra Ekle'ye basın.")); return; }
     inst.insertContent(_buildMediaMarkup(url, kind || 'image'));
     inst.focus();
   }
@@ -744,7 +795,7 @@ function _bindAutoSubmit() {
       })
       .catch(err => {
         form.dataset.richEditorImportReady = '0';
-        alert((err && err.message) || 'Görseller yüklenirken hata oluştu. Kaydetmeden önce tekrar deneyin.');
+        alert((err && err.message) || tx('Görseller yüklenirken hata oluştu. Kaydetmeden önce tekrar deneyin.'));
       });
   }, true);
 }

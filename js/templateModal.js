@@ -1,5 +1,3 @@
-import { t } from './i18n.js';
-
 /**
  * TemplateModal - Hazır şablon seçimi için modal
  */
@@ -36,6 +34,7 @@ export class TemplateModal {
   }
 
   _build() {
+    const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
     const backdrop = document.createElement('div');
     backdrop.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200';
     backdrop.addEventListener('mousedown', (e) => {
@@ -47,7 +46,7 @@ export class TemplateModal {
 
     const header = document.createElement('div');
     header.className = 'flex items-center justify-between px-5 py-4 border-b border-gray-200';
-    header.innerHTML = `<h3 class="text-base font-bold text-gray-800">${t('modal.template_title')}</h3>`;
+    header.innerHTML = `<h3 class="text-base font-bold text-gray-800">${tx('Şablon Seç')}</h3>`;
     
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -68,11 +67,11 @@ export class TemplateModal {
       
       const title = document.createElement('div');
       title.className = 'font-semibold text-gray-800 group-hover:text-blue-700 mb-1';
-      title.textContent = tpl.name;
+      title.textContent = tx(tpl.name);
       
       const desc = document.createElement('div');
       desc.className = 'text-xs text-gray-500 mb-3';
-      desc.textContent = tpl.description;
+      desc.textContent = tx(tpl.description);
       
       const preview = document.createElement('div');
       preview.className = 'w-full h-24 bg-gray-50 border border-gray-100 rounded overflow-hidden p-2 flex flex-col gap-1 pointer-events-none opacity-70';
@@ -95,49 +94,50 @@ export class TemplateModal {
   }
 
   _getTemplates() {
+    const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
     return [
       {
-        name: t('modal.tpl_twocol_title'),
-        description: t('modal.tpl_twocol_desc'),
+        name: 'İki Sütunlu Düzen',
+        description: 'Metni yan yana iki eşit sütuna böler.',
         previewHtml: '<div class="flex gap-2 h-full w-full"><div class="flex-1 bg-gray-200 rounded"></div><div class="flex-1 bg-gray-200 rounded"></div></div>',
         html: `
           <div class="editor-template-twocol" style="display: flex; gap: 1rem; margin: 1em 0;">
-            <div style="flex: 1;"><p>${t('modal.tpl_twocol_left')}</p></div>
-            <div style="flex: 1;"><p>${t('modal.tpl_twocol_right')}</p></div>
+            <div style="flex: 1;"><p>${tx('Sol sütun içeriği...')}</p></div>
+            <div style="flex: 1;"><p>${tx('Sağ sütun içeriği...')}</p></div>
           </div>
           <p><br></p>
         `
       },
       {
-        name: t('modal.tpl_alert_title'),
-        description: t('modal.tpl_alert_desc'),
+        name: 'Uyarı Kutusu',
+        description: 'Önemli bilgileri vurgulamak için renkli bir kutu.',
         previewHtml: '<div class="w-full h-12 bg-yellow-100 border-l-4 border-yellow-400 rounded"></div>',
         html: `
           <div class="editor-template-alert" style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; margin: 1em 0; border-radius: 4px;">
-            <p style="margin: 0; color: #92400e;"><strong>${t('modal.tpl_alert_label')}</strong> ${t('modal.tpl_alert_text')}</p>
+            <p style="margin: 0; color: #92400e;"><strong>${tx('Dikkat:')}</strong> ${tx('Buraya önemli uyarınızı yazın...')}</p>
           </div>
           <p><br></p>
         `
       },
       {
-        name: t('modal.tpl_info_title'),
-        description: t('modal.tpl_info_desc'),
+        name: 'Bilgi Kartı',
+        description: 'Mavi renkli genel bilgi notu.',
         previewHtml: '<div class="w-full h-12 bg-blue-50 border border-blue-200 rounded"></div>',
         html: `
           <div class="editor-template-info" style="background-color: #eff6ff; border: 1px solid #bfdbfe; padding: 1rem; margin: 1em 0; border-radius: 8px;">
-            <h3 style="margin-top: 0; color: #1e40af;">${t('modal.tpl_info_label')}</h3>
-            <p style="margin-bottom: 0; color: #1e3a8a;">${t('modal.tpl_info_text')}</p>
+            <h3 style="margin-top: 0; color: #1e40af;">${tx('Bilgi')}</h3>
+            <p style="margin-bottom: 0; color: #1e3a8a;">${tx('Ek bilgi notu buraya gelecek...')}</p>
           </div>
           <p><br></p>
         `
       },
       {
-        name: t('modal.tpl_success_title'),
-        description: t('modal.tpl_success_desc'),
+        name: 'Başarılı / Onay Kutusu',
+        description: 'Yeşil renkli başarılı işlem mesajı.',
         previewHtml: '<div class="w-full h-12 bg-green-50 border border-green-200 rounded flex items-center px-2"><span class="text-green-600 text-xs">✓</span></div>',
         html: `
           <div class="editor-template-success" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 1rem; margin: 1em 0; border-radius: 8px;">
-            <p style="margin: 0; color: #166534;">✅ ${t('modal.tpl_success_text')}</p>
+            <p style="margin: 0; color: #166534;">✅ ${tx('İşlem başarılı bir şekilde tamamlandı.')}</p>
           </div>
           <p><br></p>
         `

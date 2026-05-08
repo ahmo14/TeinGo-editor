@@ -1,5 +1,3 @@
-import { t } from './i18n.js';
-
 /**
  * Toolbar - Editör araç çubuğunu yönetir
  * 
@@ -142,7 +140,7 @@ export class Toolbar {
     const arrowBtn = document.createElement('button');
     arrowBtn.type = 'button';
     arrowBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 7L8 3.5H2Z"/></svg>';
-    arrowBtn.title = `${mainCommand.title} ${t('modal.toolbar_options') || 'Seçenekleri'}`;
+    arrowBtn.title = `${mainCommand.title} Seçenekleri`;
     arrowBtn.className = [
       'px-1 py-1.5 rounded-r-lg text-sm',
       'text-slate-400 hover:text-blue-600',

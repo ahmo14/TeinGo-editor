@@ -1,5 +1,7 @@
 import { BaseCommand } from './baseCommand.js';
 
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+
 /**
  * AccordionCommand - Metne açılır-kapanır akordiyon (details/summary) ekler.
  */
@@ -8,7 +10,7 @@ export class AccordionCommand extends BaseCommand {
     super({
       name: 'insertAccordion',
       icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/><path d="M8 12l4 4 4-4"/></svg>',
-      title: 'Akordiyon Ekle',
+      title: tx('Akordiyon Ekle'),
     });
   }
 
@@ -21,11 +23,11 @@ export class AccordionCommand extends BaseCommand {
     details.open = true; // İçini düzenleyebilmeleri için başlangıçta açık olsun
 
     const summary = document.createElement('summary');
-    summary.textContent = 'Akordiyon Başlığı (Değiştirmek için tıklayın)';
+    summary.textContent = tx('Akordiyon Başlığı (Değiştirmek için tıklayın)');
 
     const content = document.createElement('div');
     content.className = 'accordion-content';
-    content.innerHTML = '<p>Akordiyon içeriğini buraya yazın...</p>';
+    content.innerHTML = '<p>' + tx('Akordiyon içeriğini buraya yazın...') + '</p>';
 
     details.appendChild(summary);
     details.appendChild(content);

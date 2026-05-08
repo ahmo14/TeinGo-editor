@@ -1,5 +1,3 @@
-import { t } from './i18n.js';
-
 /**
  * SpecialCharModal - Özel Karakter seçim modalı
  */
@@ -36,6 +34,7 @@ export class SpecialCharModal {
   }
 
   _build() {
+    const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
     const backdrop = document.createElement('div');
     backdrop.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200';
     backdrop.addEventListener('mousedown', (e) => {
@@ -47,7 +46,7 @@ export class SpecialCharModal {
 
     const header = document.createElement('div');
     header.className = 'flex items-center justify-between px-5 py-3 border-b border-gray-200';
-    header.innerHTML = `<h3 class="text-base font-semibold text-gray-800">${t('modal.special_char_title')}</h3>`;
+    header.innerHTML = `<h3 class="text-base font-semibold text-gray-800">${tx('Özel Karakter')}</h3>`;
     
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -64,12 +63,12 @@ export class SpecialCharModal {
     sidebar.className = 'w-1/3 border-r border-gray-200 pr-2 overflow-y-auto';
     
     const categories = [
-      { id: 'all', name: t('modal.cat_all') },
-      { id: 'currency', name: t('modal.cat_currency') },
-      { id: 'text', name: t('modal.cat_text') },
-      { id: 'math', name: t('modal.cat_math') },
-      { id: 'symbols', name: t('modal.cat_symbols') },
-      { id: 'arrows', name: t('modal.cat_arrows') }
+      { id: 'all', name: tx('Tümü') },
+      { id: 'currency', name: tx('Para Birimi') },
+      { id: 'text', name: tx('Metin') },
+      { id: 'math', name: tx('Matematik') },
+      { id: 'symbols', name: tx('Semboller') },
+      { id: 'arrows', name: tx('Oklar') }
     ];
 
     let activeCategoryBtn = null;
@@ -80,7 +79,7 @@ export class SpecialCharModal {
     
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
-    searchInput.placeholder = t('modal.search');
+    searchInput.placeholder = tx('Ara...');
     searchInput.className = 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400';
     
     const charsContainer = document.createElement('div');
@@ -103,7 +102,7 @@ export class SpecialCharModal {
         btn.type = 'button';
         btn.className = 'w-10 h-10 flex items-center justify-center text-lg rounded border border-gray-200 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-colors text-slate-800';
         btn.textContent = item.char;
-        btn.title = item.name;
+        btn.title = tx(item.name);
         btn.addEventListener('click', () => this._close(item.char));
         charsContainer.appendChild(btn);
       });
@@ -145,7 +144,7 @@ export class SpecialCharModal {
     footer.className = 'flex justify-end px-5 py-3 border-t border-gray-200';
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.textContent = t('modal.close');
+    cancelBtn.textContent = tx('Kapat');
     cancelBtn.className = 'px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer';
     cancelBtn.addEventListener('click', () => this._close(null));
     footer.appendChild(cancelBtn);
@@ -165,60 +164,60 @@ export class SpecialCharModal {
   _getCharacters() {
     return [
       // Currency
-      { char: '$', name: 'Dollar', category: 'currency' },
-      { char: '¢', name: 'Cent', category: 'currency' },
+      { char: '$', name: 'Dolar', category: 'currency' },
+      { char: '¢', name: 'Sent', category: 'currency' },
       { char: '€', name: 'Euro', category: 'currency' },
-      { char: '£', name: 'Pound', category: 'currency' },
+      { char: '£', name: 'Sterlin', category: 'currency' },
       { char: '¥', name: 'Yen', category: 'currency' },
-      { char: '₺', name: 'Turkish Lira', category: 'currency' },
+      { char: '₺', name: 'Türk lirası', category: 'currency' },
       { char: '₽', name: 'Ruble', category: 'currency' },
-      { char: '₹', name: 'Rupee', category: 'currency' },
+      { char: '₹', name: 'Rupi', category: 'currency' },
       { char: '₩', name: 'Won', category: 'currency' },
       { char: '฿', name: 'Baht', category: 'currency' },
       
       // Text
-      { char: '©', name: 'Copyright', category: 'text' },
-      { char: '®', name: 'Registered', category: 'text' },
-      { char: '™', name: 'Trademark', category: 'text' },
-      { char: '§', name: 'Section', category: 'text' },
-      { char: '¶', name: 'Paragraph', category: 'text' },
-      { char: '†', name: 'Dagger', category: 'text' },
-      { char: '‡', name: 'Double Dagger', category: 'text' },
+      { char: '©', name: 'Telif hakkı', category: 'text' },
+      { char: '®', name: 'Tescilli marka', category: 'text' },
+      { char: '™', name: 'Ticari marka', category: 'text' },
+      { char: '§', name: 'Bölüm işareti', category: 'text' },
+      { char: '¶', name: 'Paragraf işareti', category: 'text' },
+      { char: '†', name: 'Hançer işareti', category: 'text' },
+      { char: '‡', name: 'Çift hançer işareti', category: 'text' },
       
       // Mathematical
-      { char: '±', name: 'Plus-Minus', category: 'math' },
-      { char: '×', name: 'Multiply', category: 'math' },
-      { char: '÷', name: 'Divide', category: 'math' },
-      { char: '∞', name: 'Infinity', category: 'math' },
-      { char: '≈', name: 'Almost Equal', category: 'math' },
-      { char: '≠', name: 'Not Equal', category: 'math' },
-      { char: '≤', name: 'Less or Equal', category: 'math' },
-      { char: '≥', name: 'Greater or Equal', category: 'math' },
-      { char: '∑', name: 'Sum', category: 'math' },
-      { char: '∏', name: 'Product', category: 'math' },
-      { char: '√', name: 'Square Root', category: 'math' },
-      { char: '∫', name: 'Integral', category: 'math' },
+      { char: '±', name: 'Artı eksi', category: 'math' },
+      { char: '×', name: 'Çarpma', category: 'math' },
+      { char: '÷', name: 'Bölme', category: 'math' },
+      { char: '∞', name: 'Sonsuzluk', category: 'math' },
+      { char: '≈', name: 'Yaklaşık eşit', category: 'math' },
+      { char: '≠', name: 'Eşit değil', category: 'math' },
+      { char: '≤', name: 'Küçük veya eşit', category: 'math' },
+      { char: '≥', name: 'Büyük veya eşit', category: 'math' },
+      { char: '∑', name: 'Toplam', category: 'math' },
+      { char: '∏', name: 'Çarpım', category: 'math' },
+      { char: '√', name: 'Karekök', category: 'math' },
+      { char: '∫', name: 'İntegral', category: 'math' },
       
       // Symbols
-      { char: '°', name: 'Degree', category: 'symbols' },
-      { char: '‰', name: 'Per Mille', category: 'symbols' },
-      { char: 'µ', name: 'Micro', category: 'symbols' },
+      { char: '°', name: 'Derece', category: 'symbols' },
+      { char: '‰', name: 'Binde', category: 'symbols' },
+      { char: 'µ', name: 'Mikro', category: 'symbols' },
       { char: 'π', name: 'Pi', category: 'symbols' },
       { char: 'Ω', name: 'Omega', category: 'symbols' },
       { char: '∆', name: 'Delta', category: 'symbols' },
       
       // Arrows
-      { char: '←', name: 'Left Arrow', category: 'arrows' },
-      { char: '↑', name: 'Up Arrow', category: 'arrows' },
-      { char: '→', name: 'Right Arrow', category: 'arrows' },
-      { char: '↓', name: 'Down Arrow', category: 'arrows' },
-      { char: '↔', name: 'Left Right Arrow', category: 'arrows' },
-      { char: '↕', name: 'Up Down Arrow', category: 'arrows' },
-      { char: '⇐', name: 'Left Double Arrow', category: 'arrows' },
-      { char: '⇑', name: 'Up Double Arrow', category: 'arrows' },
-      { char: '⇒', name: 'Right Double Arrow', category: 'arrows' },
-      { char: '⇓', name: 'Down Double Arrow', category: 'arrows' },
-      { char: '⇔', name: 'Left Right Double Arrow', category: 'arrows' }
+      { char: '←', name: 'Sol ok', category: 'arrows' },
+      { char: '↑', name: 'Yukarı ok', category: 'arrows' },
+      { char: '→', name: 'Sağ ok', category: 'arrows' },
+      { char: '↓', name: 'Aşağı ok', category: 'arrows' },
+      { char: '↔', name: 'Sol sağ ok', category: 'arrows' },
+      { char: '↕', name: 'Yukarı aşağı ok', category: 'arrows' },
+      { char: '⇐', name: 'Sol çift ok', category: 'arrows' },
+      { char: '⇑', name: 'Yukarı çift ok', category: 'arrows' },
+      { char: '⇒', name: 'Sağ çift ok', category: 'arrows' },
+      { char: '⇓', name: 'Aşağı çift ok', category: 'arrows' },
+      { char: '⇔', name: 'Sol sağ çift ok', category: 'arrows' }
     ];
   }
 }

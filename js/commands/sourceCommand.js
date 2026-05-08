@@ -1,5 +1,7 @@
 import { BaseCommand } from './baseCommand.js';
 
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+
 /**
  * SourceCommand - Görsel editör ↔ Kaynak kodu (HTML) görünümünü değiştirir.
  *
@@ -17,7 +19,7 @@ export class SourceCommand extends BaseCommand {
     super({
       name: 'toggleSource',
       icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
-      title: 'Kaynak Kodu Görünümü',
+      title: tx('Kaynak Kodu Görünümü'),
       shortcut: null,
       tag: null,
     });
@@ -47,7 +49,7 @@ export class SourceCommand extends BaseCommand {
         'overflow-y-auto',
       ].join(' ');
       textarea.spellcheck = false;
-      textarea.placeholder = '<p>HTML kodunuzu buraya yazın...</p>';
+      textarea.placeholder = tx('<p>HTML kodunuzu buraya yazın...</p>');
 
       // Editör elemanının hemen sonrasına ekle
       editorElement.parentNode.insertBefore(textarea, editorElement.nextSibling);
@@ -81,7 +83,7 @@ export class SourceCommand extends BaseCommand {
 
       // Status bar güncelle
       const statusBar = document.getElementById('status-bar');
-      if (statusBar) statusBar.textContent = 'Kaynak Kodu Modu';
+      if (statusBar) statusBar.textContent = tx('Kaynak Kodu Modu');
 
     } else {
       // ── Kaynak → Görsel ──
@@ -97,7 +99,7 @@ export class SourceCommand extends BaseCommand {
 
       // Status bar güncelle
       const statusBar = document.getElementById('status-bar');
-      if (statusBar) statusBar.textContent = 'Hazır';
+      if (statusBar) statusBar.textContent = tx('Hazır');
     }
   }
 

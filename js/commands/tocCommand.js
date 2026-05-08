@@ -1,11 +1,13 @@
 import { BaseCommand } from './baseCommand.js';
 
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+
 export class TocCommand extends BaseCommand {
   constructor() {
     super({
       name: 'insertToc',
       icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
-      title: 'İçindekiler Tablosu',
+      title: tx('İçindekiler Tablosu'),
       shortcut: null,
       tag: null,
     });
@@ -15,7 +17,7 @@ export class TocCommand extends BaseCommand {
     // Neden querySelectorAll: İçindekiler tablosunu oluşturmak için tüm başlıkları alıyoruz.
     const headings = editor.editorElement.querySelectorAll('h1, h2, h3, h4, h5, h6');
     if (headings.length === 0) {
-      alert('Belgede başlık bulunamadı. İçindekiler tablosu oluşturmak için başlık ekleyin.');
+      alert(tx('Belgede başlık bulunamadı. İçindekiler tablosu oluşturmak için başlık ekleyin.'));
       return;
     }
 
@@ -32,7 +34,7 @@ export class TocCommand extends BaseCommand {
       const title = document.createElement('strong');
       title.style.display = 'block';
       title.style.marginBottom = '8px';
-      title.textContent = 'İçindekiler';
+      title.textContent = tx('İçindekiler');
       tocContainer.appendChild(title);
 
       const ul = document.createElement('ul');

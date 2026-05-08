@@ -42,6 +42,9 @@ import { MergeTagCommand } from './commands/mergeTagCommand.js';
 import { AlertModal } from './alertModal.js';
 import { buildPayload, saveContent } from './contentService.js';
 
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+const txf = (source, ...args) => tx(source).replace(/\{(\d+)\}/g, (_, i) => args[i] ?? '');
+
 export function initEditor(userOptions = {}) {
   const config = {
     editorId: 'editor',
@@ -74,43 +77,9 @@ export function initEditor(userOptions = {}) {
     toolbarElement.style.display = 'none';
   }
 
-  // ════════════════════════════════════════════
-  // TeinGo MARKASI
-  // ════════════════════════════════════════════
-  if (config.showBrand !== false && !document.getElementById('editor-brand')) {
-    const brand = document.createElement('div');
-    brand.id = 'editor-brand';
-    brand.style.cssText = 'display:flex;align-items:center;gap:6px;padding-right:12px;margin-right:4px;border-right:1px solid #d1d5db;user-select:none;flex-shrink:0;';
-    brand.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
-        <rect width="32" height="32" rx="7" fill="#2563eb"/>
-        <text x="16" y="22" text-anchor="middle" fill="white" font-size="18" font-weight="bold" font-family="system-ui">T</text>
-      </svg>
-      <span style="font-weight:700;font-size:14px;background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">TeinGo</span>
-    `;
-
-    // Öncelik sırası: menubar > toolbar > editörün üstüne yeni çubuk
-    if (menuBarElement) {
-      menuBarElement.prepend(brand);
-    } else if (toolbarElement) {
-      toolbarElement.prepend(brand);
-    } else {
-      // Hiçbiri yoksa editörün hemen üstüne bağımsız bir marka çubuğu oluştur
-      const brandBar = document.createElement('div');
-      brandBar.style.cssText = 'display:flex;align-items:center;padding:6px 10px;background:#f8fafc;border-bottom:1px solid #e2e8f0;';
-      brandBar.appendChild(brand);
-      // border-right'ı kaldır çünkü yanında başka element yok
-      brand.style.borderRight = 'none';
-      brand.style.paddingRight = '0';
-      brand.style.marginRight = '0';
-      editorElement.parentNode.insertBefore(brandBar, editorElement);
-    }
-  }
-
   let menuBar = null;
   if (config.showMenuBar && menuBarElement) {
     menuBarElement.style.display = 'flex';
-    menuBarElement.style.alignItems = 'center';
     menuBar = new MenuBar(menuBarElement, editor);
   } else if (menuBarElement) {
     menuBarElement.style.display = 'none';
@@ -240,12 +209,12 @@ export function initEditor(userOptions = {}) {
     {
       label: t('toolbar.ulDisc'),
       icon: '●',
-      command: new ListCommand('UL', 'disc', { name: 'ul-disc', icon: '●', title: t('toolbar.ulDisc') }),
+      command: new ListCommand('UL', 'disc', { name: 'ul-disc', icon: '●', title: 'Dolu Daire' }),
     },
     {
       label: t('toolbar.ulCircle'),
       icon: '○',
-      command: new ListCommand('UL', 'circle', { name: 'ul-circle', icon: '○', title: t('toolbar.ulCircle') }),
+      command: new ListCommand('UL', 'circle', { name: 'ul-circle', icon: '○', title: 'Çember' }),
     },
     {
       label: t('toolbar.ulSquare'),
@@ -258,17 +227,17 @@ export function initEditor(userOptions = {}) {
     {
       label: t('toolbar.olDecimal'),
       icon: '1.',
-      command: new ListCommand('OL', 'decimal', { name: 'ol-decimal', icon: '1.', title: t('toolbar.olDecimal') }),
+      command: new ListCommand('OL', 'decimal', { name: 'ol-decimal', icon: '1.', title: 'Sayısal' }),
     },
     {
       label: t('toolbar.olAlpha'),
       icon: 'a.',
-      command: new ListCommand('OL', 'lower-alpha', { name: 'ol-lower-alpha', icon: 'a.', title: t('toolbar.olAlpha') }),
+      command: new ListCommand('OL', 'lower-alpha', { name: 'ol-lower-alpha', icon: 'a.', title: 'Küçük Harf' }),
     },
     {
       label: t('toolbar.olRoman'),
       icon: 'Ⅰ.',
-      command: new ListCommand('OL', 'upper-roman', { name: 'ol-upper-roman', icon: 'Ⅰ.', title: t('toolbar.olRoman') }),
+      command: new ListCommand('OL', 'upper-roman', { name: 'ol-upper-roman', icon: 'Ⅰ.', title: 'Roma Rakamı' }),
     },
   ];
 
@@ -344,7 +313,7 @@ export function initEditor(userOptions = {}) {
     if (config.menus.includes('file')) {
       menuBar.addMenu(t('menu.file'), [
         { label: t('menu.newDoc'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', action: (ed) => ed.editorElement.innerHTML = '' },
-        { label: t('menu.preview'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', action: () => AlertModal.show(t('modal.preview_soon') || 'Önizleme özelliği yakında eklenecek!', t('modal.info')) },
+        { label: t('menu.preview'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', action: () => AlertModal.show(tx('Önizleme özelliği yakında eklenecek!'), t('modal.info')) },
         'separator',
         { label: t('menu.print'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>', shortcut: 'Ctrl+P', action: () => window.print() }
       ]);
@@ -359,7 +328,7 @@ export function initEditor(userOptions = {}) {
         { label: t('menu.cut'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>', shortcut: 'Ctrl+X', action: () => document.execCommand('cut') },
         { label: t('menu.copy'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>', shortcut: 'Ctrl+C', action: () => document.execCommand('copy') },
         { label: t('menu.paste'), icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>', shortcut: 'Ctrl+V', action: async (ed) => {
-          try { const text = await navigator.clipboard.readText(); document.execCommand('insertText', false, text); } catch (e) { AlertModal.show(t('modal.paste_error') || 'Tarayıcı güvenlik politikası nedeniyle yapıştırmak için klavyeden Ctrl+V kullanın.', t('modal.info')); }
+          try { const text = await navigator.clipboard.readText(); document.execCommand('insertText', false, text); } catch (e) { AlertModal.show(tx('Tarayıcı güvenlik politikası nedeniyle yapıştırmak için klavyeden Ctrl+V kullanın.'), t('modal.info')); }
         }},
         'separator',
         { label: t('menu.selectAll'), icon: '📝', shortcut: 'Ctrl+A', action: () => document.execCommand('selectAll') }
@@ -535,7 +504,7 @@ export function initEditor(userOptions = {}) {
 
       } catch (error) {
         console.error('İçerik kaydetme hatası:', error);
-        showSaveStatus(saveStatus, '✗ ' + (t('modal.unexpected_error') || 'Beklenmeyen hata: ') + error.message, 'error');
+        showSaveStatus(saveStatus, '✗ ' + txf('Beklenmeyen hata: {0}', error.message), 'error');
 
       } finally {
         // Butonu eski haline döndür

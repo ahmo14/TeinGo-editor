@@ -1,13 +1,14 @@
 import { BaseCommand } from './baseCommand.js';
 import { PromptModal } from '../promptModal.js';
-import { t } from '../i18n.js';
+
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
 
 export class CommentCommand extends BaseCommand {
   constructor() {
     super({
       name: 'insertComment',
       icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>',
-      title: 'Yorum Ekle',
+      title: tx('Yorum Ekle'),
       shortcut: 'Ctrl+Alt+M',
       tag: 'SPAN',
     });
@@ -17,12 +18,12 @@ export class CommentCommand extends BaseCommand {
     const selection = editor.getSelection();
     if (!selection || selection.isCollapsed) {
       // Neden uyarı: Yorum eklemek için bir metin parçası seçili olmalıdır.
-      alert('Lütfen yorum eklemek için bir metin seçin.');
+      alert(tx('Lütfen yorum eklemek için bir metin seçin.'));
       return;
     }
     
     editor.saveSelection();
-    const comment = await PromptModal.show(t('modal.comment_prompt') || 'Yorumunuzu girin:', '', t('menu.comment') || 'Yorum Ekle');
+    const comment = await PromptModal.show(tx('Yorumunuzu girin:'), '', tx('Yorum Ekle'));
     if (!comment) {
       editor.restoreSelection();
       return;

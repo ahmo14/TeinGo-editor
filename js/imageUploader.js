@@ -1,64 +1,73 @@
 /**
- * ImageUploader - Resim yükleme işlemlerini yönetir
- *
- * Şu an simülasyon modunda çalışır (gerçek sunucu yok).
- * Backend hazır olduğunda sadece uploadImage fonksiyonunun içi değişecek,
- * geri kalan editör entegrasyonu aynı kalacak.
- *
- * Gerçek backend entegrasyonu için:
- * - uploadImage içindeki setTimeout'u kaldır
- * - fetch/XMLHttpRequest ile kendi API endpoint'ine POST at
- * - Dönen JSON'dan URL'yi al
+ * ImageUploader - Resim yükleme işlemlerini yönetir.
  */
 
-import { t } from './i18n.js';
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+const txf = (source, ...args) => tx(source).replace(/\{(\d+)\}/g, (_, i) => args[i] ?? '');
+const MAX_IMAGE_SIZE_MB = 5;
+
+async function readJsonResponse(response) {
+  const ct = response.headers.get('content-type') || '';
+  if (ct.toLowerCase().includes('application/json')) {
+    return response.json();
+  }
+  throw new Error(txf('Sunucu hatası: {0}', response.status));
+}
+
+function isNetworkUploadError(error) {
+  const message = String(error?.message || '');
+  return error instanceof TypeError
+    || message === 'Failed to fetch'
+    || message === 'Load failed'
+    || /NetworkError/i.test(message);
+}
 
 /**
- * Resim dosyasını sunucuya yükler (şimdilik simülasyon).
+ * Resim dosyasını sunucuya yükler.
  *
  * @param {File} file - Yüklenecek resim dosyası
  * @returns {Promise<{url: string, alt: string}>} - Yüklenen resmin URL'si ve alt metni
  *
- * @example
- * // Gerçek backend ile kullanım (ileride):
- * // const formData = new FormData();
- * // formData.append('image', file);
- * // const response = await fetch('/api/upload', { method: 'POST', body: formData });
- * // const data = await response.json();
- * // return { url: data.url, alt: file.name };
  */
 export async function uploadImage(file) {
   // Dosya tipi kontrolü
   if (!file.type.startsWith('image/')) {
-    throw new Error(`${t('modal.invalid_file_type') || 'Geçersiz dosya türü:'} ${file.type}. ${t('modal.only_images_allowed') || 'Sadece resim dosyaları kabul edilir.'}`);
+    throw new Error(txf('Geçersiz dosya türü: {0}. Sadece resim dosyaları kabul edilir.', file.type));
   }
 
-  // Dosya boyutu kontrolü (10MB sınırı)
-  const MAX_SIZE_MB = 10;
-  if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-    throw new Error(`${t('modal.file_too_large') || 'Dosya boyutu çok büyük'} (${(file.size / 1024 / 1024).toFixed(1)}MB). ${t('modal.maximum') || 'Maksimum:'} ${MAX_SIZE_MB}MB`);
+  // Sunucudaki /Upload/Image limitiyle aynı sınır.
+  if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+    throw new Error(txf('Dosya boyutu çok büyük ({0}MB). Maksimum: {1}MB', (file.size / 1024 / 1024).toFixed(1), MAX_IMAGE_SIZE_MB));
   }
 
-  // Geçici çözüm: Backend olmadığı için resmi Base64'e çeviriyoruz.
-  // Neden Base64: Kullanıcının seçtiği resmi yerel olarak anında göstermek için.
-  return new Promise((resolve, reject) => {
-    try {
-      const reader = new FileReader();
-      
-      reader.onload = () => {
-        resolve({
-          url: reader.result,
-          alt: file.name.replace(/\.[^/.]+$/, ''), // Uzantıyı kaldır
-        });
-      };
-      
-      reader.onerror = () => {
-        reject(new Error(t('modal.image_read_error') || "Resim dosyası okunamadı."));
-      };
-      
-      reader.readAsDataURL(file);
-    } catch (error) {
-      reject(error);
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch('/Upload/Image', {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin',
+      headers: { 'RequestVerificationToken': document.querySelector('meta[name="csrf-token"]')?.content ?? '' },
+    });
+    const data = await readJsonResponse(response);
+
+    if (!response.ok) {
+      throw new Error((data && data.error) || tx('Görsel yüklenemedi.'));
     }
-  });
+
+    if (!data || !data.location) {
+      throw new Error(tx('Görsel yüklenemedi.'));
+    }
+
+    return {
+      url: data.location,
+      alt: file.name.replace(/\.[^/.]+$/, ''),
+    };
+  } catch (error) {
+    if (isNetworkUploadError(error)) {
+      throw new Error(tx('Görsel yükleme bağlantısı kurulamadı. Lütfen görsel boyutunu küçültüp tekrar deneyin.'));
+    }
+    throw error;
+  }
 }

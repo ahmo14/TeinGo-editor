@@ -1,6 +1,8 @@
 import { BaseCommand } from './baseCommand.js';
 import { FormulaModal } from '../formulaModal.js';
 
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
+
 /**
  * FormulaCommand - Editöre KaTeX ile render edilmiş matematik formülü ekler.
  *
@@ -20,7 +22,7 @@ export class FormulaCommand extends BaseCommand {
     super({
       name: 'insertFormula',
       icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7V4H6l6 8-6 8h12v-3"/></svg>',
-      title: 'Denklem Ekle',
+      title: tx('Denklem Ekle'),
       shortcut: null,
       tag: null, // Formül aktif durum takibi gerektirmez
     });

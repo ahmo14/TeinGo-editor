@@ -1,13 +1,14 @@
 import { BaseCommand } from './baseCommand.js';
 import { PromptModal } from '../promptModal.js';
-import { t } from '../i18n.js';
+
+const tx = (source) => window.EditorUiLocalization?.translate(source) || source;
 
 export class FootnoteCommand extends BaseCommand {
   constructor() {
     super({
       name: 'insertFootnote',
       icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="M2 15h6"/><path d="M5 12v6"/></svg>',
-      title: t('menu.footnote') || 'Dipnot Ekle',
+      title: tx('Dipnot Ekle'),
       shortcut: null,
       tag: 'SUP',
     });
@@ -15,7 +16,7 @@ export class FootnoteCommand extends BaseCommand {
 
   async execute(editor) {
     editor.saveSelection();
-    const note = await PromptModal.show(t('modal.footnote_prompt'), '', t('menu.footnote'));
+    const note = await PromptModal.show(tx('Dipnot metnini girin:'), '', tx('Dipnot Ekle'));
     if (!note) {
       editor.restoreSelection();
       return;
